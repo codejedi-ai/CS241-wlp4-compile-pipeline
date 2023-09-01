@@ -18,12 +18,16 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include
 # the following is not python installed modules however they are modules that we created
-from blog_pages import views
-from welcome import views as welcommingviews
+from about_us import views
+from welcome import views
+from home_page import views
 urlpatterns = [
+    path('', views.index, name='index'),
+    path('welcome', views.index, name='index'),
+    path('about_us', views.index, name='index'),
+
     # include the first_app.urls module
     path('first_app/', include('first_app.urls')),
-    path('blog_pages', views.index, name='index'),
+    # admin page
     path('admin/', admin.site.urls),
-    path('', welcommingviews.index, name='index')
 ]
