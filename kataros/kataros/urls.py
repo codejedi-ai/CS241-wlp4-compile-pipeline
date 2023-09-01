@@ -17,10 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include
-from second_app import views
+# the following is not python installed modules however they are modules that we created
+from blog_pages import views
+from welcome import views as welcommingviews
 urlpatterns = [
     # include the first_app.urls module
     path('first_app/', include('first_app.urls')),
-    path('second_app', views.index, name='index'),
+    path('blog_pages', views.index, name='index'),
     path('admin/', admin.site.urls),
+    path('', welcommingviews.index, name='index')
 ]

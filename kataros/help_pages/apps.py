@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class SecondAppConfig(AppConfig):
+class HelpPagesConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'second_app'
+    name = 'help_pages'
