@@ -1,9 +1,0 @@
-/* This is a css file for styling h1 elements */
-
-h1 {
-  color: red; /* This sets the text color to red */
-  font-family: Arial, Helvetica, sans-serif; /* This sets the font family to Arial, Helvetica, or sans-serif */
-  font-size: 36px; /* This sets the font size to 36 pixels */
-  font-weight: bold; /* This makes the text bold */
-  text-align: center; /* This aligns the text to the center */
-}
