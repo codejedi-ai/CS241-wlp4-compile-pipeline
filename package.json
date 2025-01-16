@@ -1,30 +1,17 @@
 {
-  "name": "my-next-app",
-  "version": "0.1.0",
+  "name": "discord-auth",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@googlemaps/markerclusterer": "^2.5.1",
-    "@vis.gl/react-google-maps": "latest",
-    "@googlemaps/js-api-loader": "^1.16.8",
-    "next": "14.2.15",
-    "react": "^18",
-    "react-dom": "^18"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/google.maps": "^3.58.1",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.15",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "vite": "^6.0.5"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.1.1"
   }
 }
