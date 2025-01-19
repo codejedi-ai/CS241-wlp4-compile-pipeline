@@ -1,8 +1,15 @@
 {
+<<<<<<< HEAD
   "name": "next-template",
   "version": "0.1.0",
+=======
+  "name": "discord-auth",
+>>>>>>> 2d9a4e10af851ce24ff443e52251fbc4ab4f8b7a
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
+<<<<<<< HEAD
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
@@ -23,5 +30,16 @@
     "eslint": "^9",
     "eslint-config-next": "15.1.0",
     "@eslint/eslintrc": "^3"
+=======
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.0.5"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.1.1"
+>>>>>>> 2d9a4e10af851ce24ff443e52251fbc4ab4f8b7a
   }
 }
