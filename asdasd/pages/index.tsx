@@ -1,10 +1,6 @@
-// app/page.tsx
+// pages/index.tsx
 
-'use client';
-
-
-const Home = () => {
-
+const Home: React.FC = () => {
   return (
     <div>
       <h1>Hello World</h1>
