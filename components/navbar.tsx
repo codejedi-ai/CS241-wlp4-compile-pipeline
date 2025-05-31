@@ -15,7 +15,7 @@ export default function Navbar() {
         <div className="flex items-center space-x-3">
           <Link href="/" className="flex items-center space-x-3">
             <Image src="/logo.png" alt="Code Civilization Logo" width={40} height={40} className="rounded-lg" />
-            <span className="text-2xl font-bold text-purple-500">Code Civilization</span>
+            <span className="text-2xl font-bold text-purple-500">Code-Civ</span>
           </Link>
         </div>
         <nav className="hidden md:flex items-center space-x-8">
