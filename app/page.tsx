@@ -34,11 +34,7 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/levels">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
-              >
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
                 Explore Levels
               </Button>
             </Link>
