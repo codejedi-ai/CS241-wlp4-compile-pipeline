@@ -1,7 +1,0 @@
-source /u/cs241/setup
-
-cat foo.wlp4 | wlp4scan | wlp4parse | ./wlp4gen  > foo.asm
-
-cs241.linkasm < foo.asm > output.merl
-cs241.linker output.merl print.merl alloc.merl > linked.merl
-cs241.merl 0 < linked.merl > foo.mips

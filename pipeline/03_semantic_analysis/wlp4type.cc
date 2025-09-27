@@ -1,0 +1,653 @@
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <stack>
+#include <map>
+#include <queue>
+using namespace std;
+
+// WLP4 Semantic Analyzer
+// Performs type checking and symbol table management
+
+bool allCaps(string s)
+{
+    bool ret = true;
+    int i = 0;
+    while (s[i])
+    {
+        ret = ret & (isupper(s[i]) > 0);
+        i++;
+    }
+    return ret;
+}
+
+class Tree
+{
+public:
+    string rule;
+    vector<Tree *> children;
+    vector<string> ch;
+    
+    Tree(const string& r) : rule(r) {}
+    
+    ~Tree()
+    {
+        for (auto k : children)
+        {
+            delete k;
+        }
+    }
+    void printParseTree()
+    {
+        cout << rule << endl;
+        for (Tree *a : children)
+        {
+            a->printParseTree();
+        }
+    }
+};
+
+map<string, pair<vector<string>, map<string, string>>> tables;
+
+void singleGetString(Tree *dcl, string &IDValue, string &tempType)
+{
+    Tree *TYPE = dcl->children[0];
+    Tree *ID = dcl->children[1];
+    IDValue = ID->rule.substr(3);
+    if (TYPE->children.size() == 1)
+    {
+        // INT
+        tempType = "int";
+    }
+    if (TYPE->children.size() == 2)
+    {
+        // INT *
+        tempType = "int*";
+    }
+}
+
+int singleDCL(Tree *dcl, map<string, string> &symbolTables)
+{
+    string IDValue, tempType;
+    singleGetString(dcl, IDValue, tempType);
+
+    if (symbolTables.count(IDValue))
+    {
+        std::cerr << "ERROR: Duplicate initialization" << endl;
+        return 1;
+    }
+    symbolTables[IDValue] = tempType;
+    return 0;
+}
+
+int dclsLinkedList(Tree *dcls, map<string, string> &symbolTables)
+{
+    int sum = 0;
+    while (dcls->children.size() > 0)
+    {
+        // parse dcl
+        string tempType, IDValue;
+        singleGetString(dcls->children[1], IDValue, tempType);
+        if (tempType == "int" && dcls->ch[3] == "NULL")
+        {
+            cerr << "ERROR:: int = NULL ?!?!?!" << endl;
+            return 1;
+        }
+
+        if (tempType == "int*" && dcls->ch[3] == "NUM")
+        {
+            cerr << "ERROR:: int* = NUM ?!?!?!" << endl;
+            return 1;
+        }
+        sum += singleDCL(dcls->children[1], symbolTables);
+        dcls = dcls->children[0];
+    }
+    return sum;
+}
+
+void makeParamTypeList(Tree *arglist, map<string, string> &symbolTables, vector<string> &typeList);
+
+// Returns "invalid", "int" or "int*"
+string exprType(Tree *expr, map<string, string> &symbolTables)
+{
+    string ret = "invalid", a, b;
+    if (expr->rule == "expr expr PLUS term")
+    {
+        a = exprType(expr->children[0], symbolTables);
+        b = exprType(expr->children[2], symbolTables);
+        if (a == "int" && b == "int")
+        {
+            ret = "int";
+        }
+        if (a == "int*" && b == "int")
+        {
+            ret = "int*";
+        }
+        if (a == "int" && b == "int*")
+        {
+            ret = "int*";
+        }
+    }
+    else if (expr->rule == "factor ID" || expr->rule == "lvalue ID")
+    {
+        Tree *ID_Node = expr->children[0];
+        string varName = ID_Node->rule.substr(3);
+        ret = symbolTables[varName];
+    }
+    else if (expr->rule == "expr term")
+    {
+        a = exprType(expr->children[0], symbolTables);
+        ret = a;
+    }
+    else if (expr->rule == "expr expr MINUS term")
+    {
+        a = exprType(expr->children[0], symbolTables);
+        b = exprType(expr->children[2], symbolTables);
+        if (a == "int" && b == "int")
+        {
+            ret = "int";
+        }
+        if (a == "int*" && b == "int*")
+        {
+            ret = "int";
+        }
+        if (a == "int*" && b == "int")
+        {
+            ret = "int*";
+        }
+    }
+    else if (expr->rule == "term factor")
+    {
+        a = exprType(expr->children[0], symbolTables);
+        ret = a;
+    }
+    else if (expr->rule == "term term STAR factor")
+    {
+        a = exprType(expr->children[0], symbolTables);
+        b = exprType(expr->children[2], symbolTables);
+        if (a == "int" && b == "int")
+        {
+            ret = "int";
+        }
+    }
+    else if (expr->rule == "term term SLASH factor")
+    {
+        a = exprType(expr->children[0], symbolTables);
+        b = exprType(expr->children[2], symbolTables);
+        if (a == "int" && b == "int")
+        {
+            ret = "int";
+        }
+    }
+    else if (expr->rule == "term term PCT factor")
+    {
+        a = exprType(expr->children[0], symbolTables);
+        b = exprType(expr->children[2], symbolTables);
+        if (a == "int" && b == "int")
+        {
+            ret = "int";
+        }
+    }
+    else if (expr->rule == "factor NUM")
+    {
+        ret = "int";
+    }
+    else if (expr->rule == "factor NULL")
+    {
+        ret = "int*";
+    }
+    else if (expr->rule == "factor LPAREN expr RPAREN" || expr->rule == "lvalue LPAREN lvalue RPAREN")
+    {
+        ret = exprType(expr->children[1], symbolTables);
+    }
+    else if (expr->rule == "factor AMP lvalue")
+    {
+        a = exprType(expr->children[1], symbolTables);
+        if (a == "int")
+        {
+            ret = "int*";
+        }
+    }
+    else if (expr->rule == "factor STAR factor" || expr->rule == "lvalue STAR factor")
+    {
+        a = exprType(expr->children[1], symbolTables);
+        if (a == "int*")
+        {
+            ret = "int";
+        }
+    }
+    else if (expr->rule == "factor NEW INT LBRACK expr RBRACK")
+    {
+        a = exprType(expr->children[3], symbolTables);
+        if (a == "int")
+        {
+            ret = "int*";
+        }
+    }
+    else if (expr->rule == "factor ID LPAREN RPAREN")
+    {
+        string functionName = expr->children[0]->rule.substr(3);
+        if (tables[functionName].first.size() == 0)
+            ret = "int";
+    }
+    else if (expr->rule == "factor ID LPAREN arglist RPAREN")
+    {
+        vector<string> typeList;
+        Tree *TD = expr->children[0];
+        string functionName = TD->rule.substr(3);
+
+        makeParamTypeList(expr->children[2], symbolTables, typeList);
+        int len1 = tables[functionName].first.size(), len2 = typeList.size();
+        bool allSameElements = (len1 == len2);
+        for (int i = 0; i < len2 && allSameElements; i++)
+        {
+            allSameElements = allSameElements & (typeList[i] == tables[functionName].first[i]);
+        }
+        if (allSameElements)
+            ret = "int";
+    }
+
+    return ret;
+}
+
+void makeParamTypeList(Tree *arglist, map<string, string> &symbolTables, vector<string> &typeList)
+{
+    while (true)
+    {
+        string a = exprType(arglist->children[0], symbolTables);
+        typeList.push_back(a);
+        if (arglist->rule == "arglist expr")
+        {
+            break;
+        }
+        if (arglist->rule == "arglist expr COMMA arglist")
+        {
+            arglist = arglist->children[2];
+        }
+    }
+}
+
+bool allValidVar(Tree *pr, map<string, string> &symbolTables, string &illegalVar)
+{
+    bool ret = true;
+    stringstream ssin(pr->rule);
+    string firstNum, strIn;
+    ssin >> firstNum;
+    int children = 0;
+    vector<string> splitedRule;
+    
+    while (ssin >> strIn)
+    {
+        splitedRule.push_back(strIn);
+        children++;
+    }
+    
+    if (firstNum == "dcls" || firstNum == "dcl" || firstNum == "params")
+    {
+        return ret;
+    }
+    else if (pr->rule == "factor ID")
+    {
+        Tree *ID = pr->children[0];
+        string compairedString = ID->rule.substr(3);
+        ret = (symbolTables.count(compairedString) > 0);
+        if (symbolTables.count(compairedString) == 0)
+        {
+            illegalVar = compairedString;
+            ret = false;
+        }
+        return ret;
+    }
+    else if (pr->rule == "factor ID LPAREN RPAREN" || pr->rule == "factor ID LPAREN arglist RPAREN")
+    {
+        Tree *ID = pr->children[0];
+        string compairedString = ID->rule.substr(3);
+        ret = false;
+        if(symbolTables.count(compairedString)){
+            return ret;
+        }
+        illegalVar = compairedString;
+        for (auto const &pair_0 : tables)
+        {
+            if (compairedString == pair_0.first)
+            {
+                ret = true;
+                illegalVar = "";
+            }
+        }
+        if (pr->rule == "factor ID LPAREN arglist RPAREN")
+        {
+            bool buf = allValidVar(pr->children[2], symbolTables, illegalVar);
+            ret = ret & buf;
+        }
+        return ret;
+    }
+    else
+    {
+        for (int k = 0; k < pr->children.size(); k++)
+        {
+            if (splitedRule[k] == "ID" && firstNum == "procedure")
+                continue;
+            bool buf = allValidVar(pr->children[k], symbolTables, illegalVar);
+            ret = ret & buf;
+        }
+    }
+    return ret;
+}
+
+bool checkStatementTypeValidity(Tree *statements, map<string, string> &symbolTables)
+{
+    bool ret = true;
+
+    if (statements->rule == "statement lvalue BECOMES expr SEMI")
+    {
+        Tree *leftexpr = statements->children[0];
+        Tree *rightexpr = statements->children[2];
+        string leftexpr_typ = exprType(leftexpr, symbolTables);
+        string rightexpr_typ = exprType(rightexpr, symbolTables);
+        ret = ret & (rightexpr_typ == leftexpr_typ && leftexpr_typ != "invalid");
+        return ret;
+    }
+    else if (statements->rule == "statement PRINTLN LPAREN expr RPAREN SEMI")
+    {
+        string exprTpye_thus = exprType(statements->children[2], symbolTables);
+        ret = (exprTpye_thus == "int");
+        return ret;
+    }
+    else if (statements->rule == "statement DELETE LBRACK RBRACK expr SEMI")
+    {
+        string exprTpye_thus = exprType(statements->children[3], symbolTables);
+        ret = (exprTpye_thus == "int*");
+        return ret;
+    }
+    else if (statements->rule == "statements")
+    {
+        return ret;
+    }
+    else if (statements->rule == "statements statements statement")
+    {
+        ret = checkStatementTypeValidity(statements->children[0], symbolTables) &
+              checkStatementTypeValidity(statements->children[1], symbolTables);
+        return ret;
+    }
+    else
+    {
+        int loopsize = statements->children.size();
+        for (int k = 0; k < loopsize; k++)
+        {
+            if (statements->ch[k] == "statements")
+            {
+                ret = ret & checkStatementTypeValidity(statements->children[k], symbolTables);
+            }
+            if (statements->ch[k] == "test")
+            {
+                Tree *test = statements->children[k];
+                Tree *leftexpr = test->children[0];
+                Tree *rightexpr = test->children[2];
+                string leftexpr_typ = exprType(leftexpr, symbolTables);
+                string rightexpr_typ = exprType(rightexpr, symbolTables);
+                ret = ret & (rightexpr_typ == leftexpr_typ && leftexpr_typ != "invalid");
+            }
+        }
+    }
+    return ret;
+}
+
+int buildTable(Tree *pr, map<string, pair<vector<string>, map<string, string>>> &tables)
+{
+    int sum = 0;
+    stringstream ssin(pr->rule);
+
+    if (pr->rule == "start BOF procedures EOF")
+    {
+        sum += buildTable(pr->children[1], tables);
+    }
+    if (pr->rule == "procedures procedure procedures")
+    {
+        sum += buildTable(pr->children[0], tables);
+        sum += buildTable(pr->children[1], tables);
+    }
+    if (pr->rule == "procedures main")
+    {
+        sum += buildTable(pr->children[0], tables);
+    }
+    if (pr->rule == "main INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")
+    {
+        string methodName = "wain";
+        string tempType, ID;
+        int ind_lis[]{3, 5};
+        for (int i_buf = 0; i_buf < 2; i_buf++)
+        {
+            singleGetString(pr->children[ind_lis[i_buf]], ID, tempType);
+            sum += singleDCL(pr->children[ind_lis[i_buf]], tables["wain"].second);
+            tables["wain"].first.push_back(tempType);
+        }
+        singleGetString(pr->children[5], ID, tempType);
+        if (tempType != "int")
+        {
+            std::cerr << "ERROR: second variable in main must be an INTEGER varname: " << tempType << endl;
+            return 1;
+        }
+
+        sum += dclsLinkedList(pr->children[8], tables["wain"].second);
+        string illegal = "";
+        bool cmp = allValidVar(pr, tables["wain"].second, illegal);
+        if (!cmp)
+        {
+            std::cerr << "ERROR: uninitialized variable found in main"
+                      << " "
+                      << " (" << illegal << ")" << endl;
+            return 1;
+        }
+    }
+    if (pr->rule == "procedure INT ID LPAREN params RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")
+    {
+        string methodName = pr->children[1]->rule.substr(3);
+        Tree *paramlist = NULL;
+        if (pr->children[3]->rule == "params")
+        {
+        }
+        else
+        {
+            paramlist = pr->children[3]->children[0];
+        }
+        if (tables.count(methodName) > 0)
+        {
+            cerr << "ERROR: duplicate method found in " << methodName << endl;
+            return 1;
+        }
+        while (paramlist != NULL)
+        {
+            string IDValue;
+            string tempType;
+            singleGetString(paramlist->children[0], IDValue, tempType);
+            sum += singleDCL(paramlist->children[0], tables[methodName].second);
+            tables[methodName].first.push_back(tempType);
+            if (paramlist->children.size() == 1)
+                break;
+            paramlist = paramlist->children[2];
+        }
+        sum += dclsLinkedList(pr->children[6], tables[methodName].second);
+        string illegal = "";
+        bool cmp = allValidVar(pr, tables[methodName].second, illegal);
+        if (!cmp)
+        {
+            cerr << "ERROR: use of undeclared variable found in " << methodName << " (" << illegal << ")" << endl;
+            return 1;
+        }
+    }
+    return sum;
+}
+
+int checkProgramTypeValidity(Tree *pr, map<string, pair<vector<string>, map<string, string>>> &tables)
+{
+    int sum = 0;
+    stringstream ssin(pr->rule);
+
+    if (pr->rule == "start BOF procedures EOF")
+    {
+        sum += checkProgramTypeValidity(pr->children[1], tables);
+    }
+    if (pr->rule == "procedures procedure procedures")
+    {
+        sum += checkProgramTypeValidity(pr->children[0], tables);
+        sum += checkProgramTypeValidity(pr->children[1], tables);
+    }
+    if (pr->rule == "procedures main")
+    {
+        sum += checkProgramTypeValidity(pr->children[0], tables);
+    }
+    if (pr->rule == "main INT WAIN LPAREN dcl COMMA dcl RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")
+    {
+        string methodName = "wain";
+        for (int i = 0; i < pr->children.size(); i++)
+        {
+            if (pr->ch[i] == "statements")
+            {
+                bool valid = checkStatementTypeValidity(pr->children[i], tables[methodName].second);
+                if (!valid)
+                {
+                    std::cerr << "ERROR: Invalid statement in " << methodName << endl;
+                    return 1;
+                }
+            }
+            if (pr->ch[i] == "expr")
+            {
+                string exprTpye_thus = exprType(pr->children[i], tables[methodName].second);
+                if (exprTpye_thus == "invalid")
+                {
+                    std::cerr << "ERROR: Invalid return statement " << methodName << endl;
+                    return 1;
+                }
+                if (exprTpye_thus == "int*")
+                {
+                    std::cerr << "ERROR: Invalid return value int* " << methodName << endl;
+                    return 1;
+                }
+            }
+        }
+    }
+    if (pr->rule == "procedure INT ID LPAREN params RPAREN LBRACE dcls statements RETURN expr SEMI RBRACE")
+    {
+        string methodName = pr->children[1]->rule.substr(3);
+        for (int i = 0; i < pr->children.size(); i++)
+        {
+            if (pr->ch[i] == "statements")
+            {
+                bool valid = checkStatementTypeValidity(pr->children[i], tables[methodName].second);
+                if (!valid)
+                {
+                    std::cerr << "ERROR: Invalid statement in " << methodName << endl;
+                    return 1;
+                }
+            }
+            if (pr->ch[i] == "expr")
+            {
+                string exprTpye_thus = exprType(pr->children[i], tables[methodName].second);
+                if (exprTpye_thus == "invalid")
+                {
+                    std::cerr << "ERROR: Invalid return statement " << methodName << endl;
+                    return 1;
+                }
+                if (exprTpye_thus == "int*")
+                {
+                    std::cerr << "ERROR: Invalid return value int* " << methodName << endl;
+                    return 1;
+                }
+            }
+        }
+    }
+    return sum;
+}
+
+int main()
+{
+    cerr << "🔍 Stage 3: Semantic Analysis" << endl;
+    cerr << "   Building symbol tables and type checking..." << endl;
+
+    // Build parse tree from input
+    string curLine;
+    stack<Tree *> WLP4I;
+    stack<int> WLP4INumChildren;
+    Tree *root;
+    bool first = true;
+    
+    while (getline(cin, curLine))
+    {
+        WLP4I.push(new Tree{curLine});
+        if (first)
+        {
+            root = WLP4I.top();
+            first = false;
+        }
+        stringstream ssin(curLine);
+        string firstNum, strIn;
+        ssin >> firstNum;
+        int children = 0;
+        
+        while (ssin >> strIn)
+        {
+            WLP4I.top()->ch.push_back(strIn);
+            children++;
+        }
+        if (allCaps(firstNum))
+        {
+            children = 0;
+        }
+        WLP4INumChildren.push(children);
+        
+        while (!WLP4INumChildren.empty() && !WLP4INumChildren.top())
+        {
+            WLP4INumChildren.pop();
+            Tree *removed_node = WLP4I.top();
+            WLP4I.pop();
+            if (WLP4INumChildren.empty() || WLP4I.empty())
+                break;
+            WLP4I.top()->children.push_back(removed_node);
+
+            int buf = WLP4INumChildren.top();
+            WLP4INumChildren.pop();
+            WLP4INumChildren.push(buf - 1);
+        }
+    }
+
+    // Build symbol tables
+    if (buildTable(root, tables))
+    {
+        cerr << "   ❌ Symbol table construction failed" << endl;
+        delete root;
+        return 1;
+    }
+
+    // Print symbol tables
+    for (auto const &pair_0 : tables)
+    {
+        std::cerr << pair_0.first << ":";
+        for (int i = 0; i < pair_0.second.first.size(); i++)
+        {
+            std::cerr << " " << tables[pair_0.first].first[i];
+        }
+        cerr << endl;
+        for (auto const &pair_3 : pair_0.second.second)
+        {
+            std::cerr << pair_3.first << " " << pair_3.second << endl;
+        }
+    }
+
+    // Type checking
+    if (checkProgramTypeValidity(root, tables))
+    {
+        cerr << "   ❌ Type checking failed" << endl;
+        delete root;
+        return 1;
+    }
+
+    cerr << "   ✓ Semantic analysis completed successfully" << endl;
+    
+    // Print the AST
+    root->printParseTree();
+    
+    delete root;
+    return 0;
+}

@@ -1,2 +1,0 @@
-wlp4c < foo.wlp4 > test.mips
-mips.twoints test.mips
