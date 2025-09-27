@@ -1,0 +1,1 @@
+galaxy.o: galaxy.cc

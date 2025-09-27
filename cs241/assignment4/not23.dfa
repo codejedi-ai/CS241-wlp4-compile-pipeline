@@ -1,0 +1,29 @@
+2
+0
+1
+7
+start
+0mod3and1mod2
+0mod3and0mod2
+1mod3and1mod2
+1mod3and0mod2
+2mod3and1mod2
+2mod3and0mod2
+start
+2
+1mod3and1mod2
+2mod3and1mod2
+13
+start 1 1mod3and1mod2
+0mod3and1mod2 1 1mod3and1mod2
+0mod3and1mod2 0 0mod3and0mod2
+0mod3and0mod2 1 1mod3and1mod2
+0mod3and0mod2 0 0mod3and0mod2
+1mod3and1mod2 1 0mod3and1mod2
+1mod3and1mod2 0 2mod3and0mod2
+1mod3and0mod2 1 0mod3and1mod2
+1mod3and0mod2 0 2mod3and0mod2
+2mod3and1mod2 1 2mod3and1mod2
+2mod3and1mod2 0 1mod3and0mod2
+2mod3and0mod2 1 2mod3and1mod2
+2mod3and0mod2 0 1mod3and0mod2

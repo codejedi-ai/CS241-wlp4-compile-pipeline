@@ -1,0 +1,103 @@
+11
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+-
+11
+start
+num
+num2
+negHundreds
+negTens
+negOnes
+Hundreds
+Tens
+Ones
+sign
+zero
+start
+9
+num
+num2
+zero
+negHundreds
+negTens
+negOnes
+Hundreds
+Tens
+Ones
+67
+start 0 zero
+start - sign
+num 0 num2
+num 1 num2
+num 2 num2
+num 3 num2
+num 4 num2
+num 5 num2
+num 6 num2
+num 7 num2
+num 8 num2
+num 9 num2
+start 1 Hundreds
+start 2 num
+start 3 num
+start 4 num
+start 5 num
+start 6 num
+start 7 num
+start 8 num
+start 9 num
+sign 1 negHundreds
+sign 2 num
+sign 3 num
+sign 4 num
+sign 5 num
+sign 6 num
+sign 7 num
+sign 8 num
+sign 9 num
+Hundreds 0 num
+Hundreds 1 num
+Hundreds 2 Tens
+Hundreds 3 Ones
+Hundreds 4 Ones
+Hundreds 5 Ones
+Hundreds 6 Ones
+Hundreds 7 Ones
+Hundreds 8 Ones
+Hundreds 9 Ones
+Tens 0 Ones
+Tens 1 Ones
+Tens 2 Ones
+Tens 3 Ones
+Tens 4 Ones
+Tens 5 Ones
+Tens 6 Ones
+Tens 7 Ones
+negHundreds 0 num
+negHundreds 1 num
+negHundreds 2 negTens
+negHundreds 3 negOnes
+negHundreds 4 negOnes
+negHundreds 5 negOnes
+negHundreds 6 negOnes
+negHundreds 7 negOnes
+negHundreds 8 negOnes
+negHundreds 9 negOnes
+negTens 0 negOnes
+negTens 1 negOnes
+negTens 2 negOnes
+negTens 3 negOnes
+negTens 4 negOnes
+negTens 5 negOnes
+negTens 6 negOnes
+negTens 7 negOnes
+negTens 8 negOnes

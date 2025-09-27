@@ -1,0 +1,12 @@
+int fact(int n) {
+  int ret = 0;
+  if (n == 0) {
+    ret = 1;
+  }
+  else {
+    ret = n * fact(n - 1);
+  }
+  return ret;
+}
+
+int wain(int a, int b) { return fact(5); }

@@ -1,0 +1,3 @@
+source /u/cs241/setup
+
+cs241.binasm < foo.asm  > foo.mips

@@ -1,0 +1,4 @@
+source /u/cs241/setup
+wlp4scan < foo.wlp4 > foo.scanned
+wlp4parse < foo.scanned > foo.wlp4i
+rm foo.scanned

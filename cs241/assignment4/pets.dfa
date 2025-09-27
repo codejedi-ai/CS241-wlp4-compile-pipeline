@@ -1,0 +1,51 @@
+4
+cat
+dog
+iguana
+mouse
+8
+start
+cat1
+dog1
+iguana1
+cat2
+dog2
+mouse1
+fini
+start
+2
+fini
+mouse1
+32
+start iguana start
+start dog start
+start mouse start
+start cat cat1
+cat1 iguana start
+cat1 dog dog1
+cat1 mouse start
+cat1 cat cat1
+dog1 iguana iguana1
+dog1 dog start
+dog1 mouse start
+dog1 cat cat1
+iguana1 iguana start
+iguana1 dog start
+iguana1 mouse start
+iguana1 cat cat2
+cat2 iguana start
+cat2 dog dog2
+cat2 mouse start
+cat2 cat cat1
+dog2 iguana iguana1
+dog2 dog start
+dog2 mouse mouse1
+dog2 cat cat1
+mouse1 iguana fini
+mouse1 dog fini
+mouse1 mouse fini
+mouse1 cat fini
+fini iguana fini
+fini dog fini
+fini mouse fini
+fini cat fini

@@ -1,0 +1,40 @@
+treeheight:
+sw $4, -4($30) ; holds the parameter with is i it gets arr[i]
+sw $5, -8($30) ; holds array address of the ith value
+sw $6, -12($30) ; first child value
+sw $7, -16($30) ; second child value
+sw $8, -20($30) 
+sw $9, -24($30)
+sw $31, -28($30)
+lis $31
+.word 28
+sub $30, $30, $31
+
+; $3 returns the height of the array
+
+list $31
+.word 4
+mult $4, $31
+mflo $31;
+; $31 = i * 8
+add $5, $1, $31 
+list $31
+.word 8
+add $5, $1, $31 ; First Child Value
+add $6, $5, $31 ; Second child value
+
+
+end:
+lis $31
+.word 28
+add $30, $30, $31
+lw $4, -4($30) ; holds array address
+lw $5, -8($30)
+lw $6, -12($30)
+lw $7, -16($30)
+lw $8, -20($30)
+lw $9, -24($30)
+lw $31, -28($30)
+jr $31
+
+
