@@ -1,0 +1,8 @@
+int wain(int a, int b) {
+    if (a == 7) {
+        println(1);
+    } else {
+        println(0);
+    }
+    return 0;
+}

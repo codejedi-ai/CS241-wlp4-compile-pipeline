@@ -1,0 +1,15 @@
+int wain(int a, int b) {
+    println(72);   // 'H'
+    println(101);  // 'e'
+    println(108);  // 'l'
+    println(108);  // 'l'
+    println(111);  // 'o'
+    println(32);   // ' ' (space)
+    println(87);   // 'W'
+    println(111);  // 'o'
+    println(114);  // 'r'
+    println(108);  // 'l'
+    println(100);  // 'd'
+    println(10);   // '\n' (newline)
+    return 0;
+}
