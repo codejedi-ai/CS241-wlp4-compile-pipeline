@@ -126,8 +126,6 @@ private:
             response = handleParse(body);
         } else if (path == "/codegen" && method == "POST") {
             response = handleCodegen(body);
-        } else if (path == "/mips_to_x86" && method == "POST") {
-            response = handleMipsToX86(body);
         } else if (path == "/compile" && method == "POST") {
             response = handleCompile(body);
         } else {
@@ -140,7 +138,7 @@ private:
     
     
     std::string handleHealth() {
-        std::string json = R"({"status":"healthy","message":"WLP4 Compiler API Server is running","endpoints":["/health","/scan","/parse","/codegen","/mips_to_x86","/compile"]})";
+        std::string json = R"({"status":"healthy","message":"WLP4 Compiler API Server is running","endpoints":["/health","/scan","/parse","/codegen","/compile"]})";
         return createHTTPResponse(json, "application/json");
     }
     
@@ -206,25 +204,6 @@ private:
         return createHTTPResponse(json.str(), "application/json");
     }
     
-    std::string handleMipsToX86(const std::string& body) {
-        std::string input_mips = parseFormData(body, "mips_asm");
-        if (input_mips.empty()) {
-            return createHTTPResponse(R"({"success":false,"error":"No MIPS assembly provided"})", "application/json");
-        }
-        
-        auto result = runCompilerStage("./04_mips_to_x86/mips_to_x86", input_mips);
-        
-        std::ostringstream json;
-        json << "{\"success\":" << (result.success ? "true" : "false");
-        if (result.success) {
-            json << ",\"output\":\"" << escapeJson(result.output) << "\"";
-        } else {
-            json << ",\"error\":\"" << escapeJson(result.error) << "\"";
-        }
-        json << "}";
-        
-        return createHTTPResponse(json.str(), "application/json");
-    }
     
     std::string handleCompile(const std::string& body) {
         std::string input_code = parseFormData(body, "code");
@@ -265,7 +244,7 @@ private:
     }
     
     std::string handle404() {
-        std::string json = R"({"error":"404 Not Found","message":"The requested endpoint was not found","available_endpoints":["/health","/scan","/parse","/codegen","/mips_to_x86","/compile"]})";
+        std::string json = R"({"error":"404 Not Found","message":"The requested endpoint was not found","available_endpoints":["/health","/scan","/parse","/codegen","/compile"]})";
         return createHTTPResponse(json, "application/json", 404);
     }
     
@@ -411,7 +390,6 @@ int main(int argc, char* argv[]) {
     std::cout << "  POST /scan - Scanner worker" << std::endl;
     std::cout << "  POST /parse - Parser worker" << std::endl;
     std::cout << "  POST /codegen - Code generator worker" << std::endl;
-    std::cout << "  POST /mips_to_x86 - MIPS to x86 converter worker" << std::endl;
     std::cout << "  POST /compile - Complete compilation pipeline" << std::endl;
     std::cout << std::endl;
     std::cout << "API server will start on http://localhost:" << port << std::endl;
@@ -420,8 +398,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::pair<std::string, std::string>> workers = {
         {"Scanner Worker", "./01_scan/wlp4scan"},
         {"Parser Worker", "./02_parse/wlp4parse"},
-        {"Code Generator Worker", "./03_codegen/wlp4gen"},
-        {"MIPS to x86 Converter Worker", "./04_mips_to_x86/mips_to_x86"}
+        {"Code Generator Worker", "./03_codegen/wlp4gen"}
     };
     
     std::vector<std::string> missing_workers;

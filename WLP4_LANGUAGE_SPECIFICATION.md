@@ -326,9 +326,7 @@ int wain(int a, int b) {
 1. **Scanner**: Tokenizes input into WLP4 tokens
 2. **Parser**: Builds parse tree from tokens
 3. **Code Generator**: Generates MIPS assembly
-4. **MIPS to x86 Converter**: Converts MIPS to x86 assembly
-5. **Assembler**: Assembles x86 to object code
-6. **Linker**: Links object code to executable
+4. **MIPS Emulator**: Executes MIPS assembly directly
 
 ## Key Limitations
 

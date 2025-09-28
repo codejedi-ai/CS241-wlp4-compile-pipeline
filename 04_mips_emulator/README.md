@@ -76,4 +76,4 @@ make
 - **Label Resolution**: Two-pass assembly (collect labels, then execute)
 - **Runtime Integration**: Built-in support for WLP4 runtime functions
 
-This emulator provides a simple way to execute MIPS assembly without needing to compile to x86.
+This emulator provides a simple way to execute MIPS assembly directly without additional compilation steps.

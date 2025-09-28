@@ -19,7 +19,6 @@ STAGES_DIR = @completed
 SCANNED_DIR = $(STAGES_DIR)/01_scanned
 PARSED_DIR = $(STAGES_DIR)/02_parsed
 MIPS_DIR = $(STAGES_DIR)/03_mips_asm
-X86_DIR = $(STAGES_DIR)/04_x86_asm
 
 # Default target - webserver depends on compiler stages
 all: $(TARGET)
@@ -41,8 +40,8 @@ compiler-stages:
 	@cd 02_parse && make
 	@echo "Building Code Generator worker..."
 	@cd 03_codegen && make
-	@echo "Building MIPS to x86 Converter worker..."
-	@cd 04_mips_to_x86 && make
+	@echo "Building MIPS Emulator worker..."
+	@cd 04_mips_emulator && make
 	@echo "All compiler worker stages built successfully!"
 
 # Clean up generated files
@@ -51,12 +50,12 @@ clean:
 	cd 01_scan && make clean
 	cd 02_parse && make clean
 	cd 03_codegen && make clean
-	cd 04_mips_to_x86 && make clean
+	cd 04_mips_emulator && make clean
 	rm -rf $(STAGES_DIR)/*
 
 # Create stage directories
 setup-dirs:
-	mkdir -p $(SCANNED_DIR) $(PARSED_DIR) $(MIPS_DIR) $(X86_DIR)
+	mkdir -p $(SCANNED_DIR) $(PARSED_DIR) $(MIPS_DIR)
 
 # Compile a WLP4 file through the complete pipeline
 compile: setup-dirs
@@ -71,13 +70,10 @@ compile: setup-dirs
 	@cd 02_parse && cat ../$(SCANNED_DIR)/$(shell basename $(FILE) .wlp4).scan | ./wlp4parse > ../$(PARSED_DIR)/$(shell basename $(FILE) .wlp4).parse
 	@echo "Stage 3: Code Generation (MIPS)..."
 	@cat $(PARSED_DIR)/$(shell basename $(FILE) .wlp4).parse | ./03_codegen/wlp4gen > $(MIPS_DIR)/$(shell basename $(FILE) .wlp4).asm
-	@echo "Stage 4: MIPS to x86 Conversion..."
-	@cat $(MIPS_DIR)/$(shell basename $(FILE) .wlp4).asm | ./04_mips_to_x86/mips_to_x86 > $(X86_DIR)/$(shell basename $(FILE) .wlp4).x86
 	@echo "Compilation complete! Output files:"
 	@echo "  Scanned: $(SCANNED_DIR)/$(shell basename $(FILE) .wlp4).scan"
 	@echo "  Parsed:  $(PARSED_DIR)/$(shell basename $(FILE) .wlp4).parse"
 	@echo "  MIPS:    $(MIPS_DIR)/$(shell basename $(FILE) .wlp4).asm"
-	@echo "  x86:     $(X86_DIR)/$(shell basename $(FILE) .wlp4).x86"
 
 # Run the API server (ensures workers are built)
 run: $(TARGET)
@@ -95,7 +91,7 @@ test: $(TARGET)
 	@echo "Health check:"
 	@curl -s http://localhost:5000/health || echo "Server not running"
 	@echo ""
-	@echo "Available endpoints: /health, /scan, /parse, /codegen, /mips_to_x86, /compile"
+	@echo "Available endpoints: /health, /scan, /parse, /codegen, /compile"
 
 # Install target (optional)
 install: $(TARGET)
@@ -112,12 +108,11 @@ structure:
 	@echo "├── 02_parse/         # Parser stage"
 	@echo "│   └── grammar/      # Grammar files"
 	@echo "├── 03_codegen/       # Code generator stage"
-	@echo "├── 04_mips_to_x86/   # MIPS to x86 converter"
+	@echo "├── 04_mips_emulator/ # MIPS processor emulator"
 	@echo "├── stages/           # Compilation stage outputs"
 	@echo "│   ├── 01_scanned/   # Token streams"
 	@echo "│   ├── 02_parsed/    # Parse trees"
-	@echo "│   ├── 03_mips_asm/  # MIPS assembly"
-	@echo "│   └── 04_x86_asm/   # x86 assembly"
+	@echo "│   └── 03_mips_asm/  # MIPS assembly"
 	@echo "├── grammar/          # Main grammar files"
 	@echo "└── webserver         # API server"
 

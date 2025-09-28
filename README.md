@@ -1,6 +1,6 @@
 # WLP4 Compiler
 
-A complete implementation of a compiler for the WLP4 programming language, consisting of four stages: Scanner, Parser, Code Generator, and MIPS to x86 Converter. The compiler translates WLP4 source code into x86 assembly code.
+A complete implementation of a compiler for the WLP4 programming language, consisting of three stages: Scanner, Parser, and Code Generator. The compiler translates WLP4 source code into MIPS assembly code, which can be executed using the included MIPS emulator.
 
 ## Project Structure
 
@@ -19,10 +19,10 @@ wlp4-compiler/
 │   ├── wlp4gen.cc    # Code generator implementation
 │   ├── Makefile      # Build configuration
 │   └── README.md     # Code generator documentation
-├── 04_mips_to_x86/   # MIPS to x86 converter stage
-│   ├── mips_to_x86.cc # MIPS to x86 converter implementation
+├── 04_mips_emulator/ # MIPS processor emulator
+│   ├── mips_emulator.cc # MIPS emulator implementation
 │   ├── Makefile      # Build configuration
-│   └── README.md     # Converter documentation
+│   └── README.md     # Emulator documentation
 ├── webserver.cpp     # C++ web server wrapper
 ├── Makefile          # Build configuration for webserver
 └── README.md         # This file
@@ -76,9 +76,9 @@ The WLP4 compiler consists of four sequential worker stages:
    - Input: Parse tree (`.parsed`)
    - Output: MIPS assembly (`.asm`)
 
-4. **MIPS to x86 Converter Worker** (`04_mips_to_x86/`) - Assembly conversion
+4. **MIPS Emulator** (`04_mips_emulator/`) - Direct execution
    - Input: MIPS assembly (`.asm`)
-   - Output: x86 assembly (`.x86`)
+   - Output: Program execution results
 
 ## Building the Compiler
 
@@ -102,7 +102,7 @@ make compiler-stages
 make -C 01_scan
 make -C 02_parse
 make -C 03_codegen
-make -C 04_mips_to_x86
+make -C 04_mips_emulator
 ```
 
 ### Clean Build
@@ -115,7 +115,7 @@ make clean
 make -C 01_scan clean
 make -C 02_parse clean
 make -C 03_codegen clean
-make -C 04_mips_to_x86 clean
+make -C 04_mips_emulator clean
 ```
 
 ## Usage
@@ -124,13 +124,15 @@ make -C 04_mips_to_x86 clean
 
 ```bash
 # Complete compilation pipeline
-./01_scan/wlp4scan < input.wlp4 | ./02_parse/wlp4parse | ./03_codegen/wlp4gen | ./04_mips_to_x86/mips_to_x86 > output.x86
+./01_scan/wlp4scan < input.wlp4 | ./02_parse/wlp4parse | ./03_codegen/wlp4gen > output.asm
 
 # Individual stages
 ./01_scan/wlp4scan < input.wlp4 > tokens.scanned
 ./02_parse/wlp4parse < tokens.scanned > parse_tree.parsed
 ./03_codegen/wlp4gen < parse_tree.parsed > output.asm
-./04_mips_to_x86/mips_to_x86 < output.asm > output.x86
+
+# Execute MIPS assembly
+./04_mips_emulator/mips_emulator output.asm
 ```
 
 ### API Server
@@ -154,7 +156,6 @@ The API server will be available at `http://localhost:5000` (or custom port) wit
 - **POST /scan** - Scanner worker
 - **POST /parse** - Parser worker
 - **POST /codegen** - Code generator worker
-- **POST /mips_to_x86** - MIPS to x86 converter worker
 - **POST /compile** - Complete compilation pipeline
 
 #### API Usage Examples
@@ -182,21 +183,15 @@ curl -X POST http://localhost:5000/codegen \
   -F "parse_tree=start BOF procedures EOF\n..."
 ```
 
-**MIPS to x86 Converter Worker:**
-```bash
-curl -X POST http://localhost:5000/mips_to_x86 \
-  -F "mips_asm=add \$1, \$2, \$3\nlw \$4, 4(\$5)"
-```
-
 **Complete Compilation Pipeline:**
 ```bash
 curl -X POST http://localhost:5000/compile \
-  -F "code=int wain() { return 0; }"
+  -F "code=int wain(int a, int b) { println(42); return 0; }"
 ```
 
 ## Generated Assembly
 
-The compiler generates MIPS assembly code that is then converted to x86 assembly:
+The compiler generates MIPS assembly code that can be executed using the included emulator:
 
 ### MIPS Assembly Features
 - Uses standard MIPS instruction set
@@ -205,11 +200,11 @@ The compiler generates MIPS assembly code that is then converted to x86 assembly
 - Supports dynamic memory allocation
 - Includes runtime library imports
 
-### x86 Assembly Features
-- Uses x86 instruction set
-- Maps MIPS registers to x86 registers
-- Converts MIPS addressing modes to x86 equivalents
-- Maintains semantic equivalence
+### MIPS Emulator Features
+- Simulates MIPS processor execution
+- Supports all basic MIPS instructions
+- Implements runtime library functions (print, println, etc.)
+- Direct execution without compilation
 
 ### Example Generated Assembly
 
@@ -233,24 +228,15 @@ jr $31
 ; end epilogue
 ```
 
-**x86 Assembly (final):**
-```assembly
-.import print
-.import init
-.import new
-.import delete
-mov ecx, 4
-mov edx, 1
-cmp eax, eax
-je wain
-wain: ; begin prologue
-mov esp, ebp
-sub esp, ecx ; setup frame pointer
-; ... function body ...
-; begin epilogue
-add esp, ecx ; update stack pointer
-jmp eax
-; end epilogue
+**Execution with MIPS Emulator:**
+```bash
+# Compile WLP4 to MIPS
+echo "int wain(int a, int b) { println(42); return 0; }" | \
+  ./01_scan/wlp4scan | ./02_parse/wlp4parse | ./03_codegen/wlp4gen > output.asm
+
+# Execute with emulator
+./04_mips_emulator/mips_emulator output.asm
+# Output: 42
 ```
 
 ## Testing
@@ -260,7 +246,7 @@ Each stage includes test files:
 - **Scanner**: `gcd.wlp4` → `gcd.wlp4_scanned`
 - **Parser**: `gcd.wlp4_scanned` → `gcd.wlp4_parsed`
 - **Code Generator**: `gcd.wlp4_parsed` → `gcd.asm`
-- **MIPS to x86 Converter**: `gcd.asm` → `gcd.x86`
+- **MIPS Emulator**: `gcd.asm` → execution output
 
 ## Error Handling
 
@@ -276,9 +262,9 @@ The compiler provides detailed error messages for:
 ### Code Structure
 
 - **Scanner**: DFA-based tokenizer with maximal munch algorithm
-- **Parser**: LR(1) bottom-up parser with parse tree construction
+- **Parser**: LR(1) bottom-up parser with parse tree construction and enhanced error reporting
 - **Code Generator**: Recursive tree traversal with type checking
-- **MIPS to x86 Converter**: Instruction-by-instruction translation with register mapping
+- **MIPS Emulator**: Direct execution of MIPS assembly with runtime function support
 
 ### Adding Features
 
@@ -287,7 +273,7 @@ To extend the compiler:
 1. **Scanner**: Add new token types to the DFA
 2. **Parser**: Update grammar in `WLP4.lr1`
 3. **Code Generator**: Add code generation rules for new constructs
-4. **MIPS to x86 Converter**: Add new instruction mappings and register allocation strategies
+4. **MIPS Emulator**: Add support for new MIPS instructions or runtime functions
 
 ## License
 
