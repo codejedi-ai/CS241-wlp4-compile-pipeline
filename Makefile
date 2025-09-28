@@ -1,124 +1,87 @@
-# Master Makefile for WLP4 to x86 Compiler Pipeline
-# Orchestrates the complete compilation pipeline
+# Makefile for WLP4 Compiler Web Server
+# Compiles C++ webserver and all compiler stages
 
-# Default target
-all: build
+# Compiler and flags
+CXX = g++
+CXXFLAGS = -std=c++14 -Wall -Wextra -g -O2 -pthread
 
-# Build all pipeline stages
-build:
-	@echo "🔨 Building WLP4 to x86 Compiler Pipeline..."
-	@echo "============================================="
-	@echo ""
-	@echo "📝 Building Stage 1: Lexical Analysis (Scanner)..."
-	@cd pipeline/01_lexical_analysis && make all
-	@echo "   ✓ Scanner built successfully"
-	@echo ""
-	@echo "🌳 Building Stage 2: Syntax Analysis (Parser)..."
-	@cd pipeline/02_syntax_analysis && make all
-	@echo "   ✓ Parser built successfully"
-	@echo ""
-	@echo "🔍 Building Stage 3: Semantic Analysis..."
-	@cd pipeline/03_semantic_analysis && make all
-	@echo "   ✓ Semantic analyzer built successfully"
-	@echo ""
-	@echo "⚙️  Building Stage 4: Code Generation..."
-	@cd pipeline/04_code_generation && make all
-	@echo "   ✓ Code generator built successfully"
-	@echo ""
-	@echo "🔧 Building Stage 5: Assembly..."
-	@cd pipeline/05_assembly && make all
-	@echo "   ✓ Assembler built successfully"
-	@echo ""
-	@echo "🔗 Building Stage 6: Linking..."
-	@cd pipeline/06_linking && make all
-	@echo "   ✓ Linker built successfully"
-	@echo ""
-	@echo "🚀 Building Stage 7: Execution..."
-	@cd pipeline/07_execution && make all
-	@echo "   ✓ Execution stage ready"
-	@echo ""
-	@echo "✅ All pipeline stages built successfully!"
+# Target executable
+TARGET = webserver
 
-# Test all pipeline stages
-test:
-	@echo "Testing WLP4 to x86 Compiler Pipeline..."
-	@echo "======================================="
-	@cd pipeline/01_lexical_analysis && make test
-	@cd pipeline/02_syntax_analysis && make test
-	@cd pipeline/03_semantic_analysis && make test
-	@cd pipeline/04_code_generation && make test
-	@cd pipeline/05_assembly && make test
-	@cd pipeline/06_linking && make test
-	@cd pipeline/07_execution && make test
-	@echo ""
-	@echo "✅ All pipeline tests completed successfully!"
+# Source files
+SOURCES = webserver.cpp
 
-# Clean all pipeline stages
+# Object files
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# Default target - webserver depends on compiler stages
+all: $(TARGET)
+
+# Build the webserver executable (depends on compiler stages)
+$(TARGET): $(OBJECTS) compiler-stages
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS)
+
+# Compile source files to object files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Build all compiler stages (workers)
+compiler-stages:
+	@echo "Building compiler worker stages..."
+	@echo "Building Scanner worker..."
+	@cd 01_scan && make
+	@echo "Building Parser worker..."
+	@cd 02_parse && make
+	@echo "Building Code Generator worker..."
+	@cd 03_codegen && make
+	@echo "All compiler worker stages built successfully!"
+
+# Clean up generated files
 clean:
-	@echo "Cleaning WLP4 to x86 Compiler Pipeline..."
-	@echo "========================================="
-	@cd pipeline/01_lexical_analysis && make clean
-	@cd pipeline/02_syntax_analysis && make clean
-	@cd pipeline/03_semantic_analysis && make clean
-	@cd pipeline/04_code_generation && make clean
-	@cd pipeline/05_assembly && make clean
-	@cd pipeline/06_linking && make clean
-	@cd pipeline/07_execution && make clean
-	@echo ""
-	@echo "✅ All pipeline stages cleaned!"
+	rm -f $(OBJECTS) $(TARGET)
+	cd 01_scan && make clean
+	cd 02_parse && make clean
+	cd 03_codegen && make clean
 
-# Install all pipeline stages
-install:
-	@echo "Installing WLP4 to x86 Compiler Pipeline..."
-	@echo "=========================================="
-	@cd pipeline/01_lexical_analysis && make install
-	@cd pipeline/02_syntax_analysis && make install
-	@cd pipeline/03_semantic_analysis && make install
-	@cd pipeline/04_code_generation && make install
-	@cd pipeline/05_assembly && make install
-	@cd pipeline/06_linking && make install
-	@cd pipeline/07_execution && make install
-	@echo ""
-	@echo "✅ All pipeline stages installed!"
+# Run the API server (ensures workers are built)
+run: $(TARGET)
+	@echo "Starting WLP4 Compiler API Server with workers..."
+	./$(TARGET)
 
-# Run complete pipeline demo
-demo: build
-	@echo "Running Complete Pipeline Demo..."
-	@echo "================================="
-	@echo "Compiling sample programs through all stages..."
-	@echo ""
-	@echo "1. Simple Addition:"
-	@cd pipeline/01_lexical_analysis && ./wlp4scan < ../../samples/01_simple_addition.wlp4 | cd ../02_syntax_analysis && ./wlp4parse | cd ../04_code_generation && ./wlp4gen_x86 | cd ../05_assembly && ./x86_assembler /dev/stdin temp.o && cd ../06_linking && ./x86_linker simple_add ../05_assembly/temp.o
-	@echo ""
-	@echo "2. Multiplication:"
-	@cd pipeline/01_lexical_analysis && ./wlp4scan < ../../samples/02_multiplication.wlp4 | cd ../02_syntax_analysis && ./wlp4parse | cd ../04_code_generation && ./wlp4gen_x86 | cd ../05_assembly && ./x86_assembler /dev/stdin temp.o && cd ../06_linking && ./x86_linker multiplication ../05_assembly/temp.o
-	@echo ""
-	@echo "3. Hello World:"
-	@cd pipeline/01_lexical_analysis && ./wlp4scan < ../../samples/03_hello_world.wlp4 | cd ../02_syntax_analysis && ./wlp4parse | cd ../04_code_generation && ./wlp4gen_x86 | cd ../05_assembly && ./x86_assembler /dev/stdin temp.o && cd ../06_linking && ./x86_linker hello_world ../05_assembly/temp.o
-	@echo ""
-	@echo "✅ Demo completed successfully!"
+# Run on specific port
+run-port: $(TARGET)
+	@read -p "Enter port number: " port; \
+	./$(TARGET) $$port
 
-# Show pipeline status
-status:
-	@echo "WLP4 to x86 Compiler Pipeline Status"
-	@echo "===================================="
-	@echo "Pipeline Stages:"
-	@echo "  01_lexical_analysis  - Scanner (wlp4scan.cc)"
-	@echo "  02_syntax_analysis   - Parser (wlp4parse.cc)"
-	@echo "  03_semantic_analysis - Integrated"
-	@echo "  04_code_generation   - Code Generator (wlp4gen_x86.cc)"
-	@echo "  05_assembly          - Assembler (x86_assembler.cpp)"
-	@echo "  06_linking           - Linker (x86_linker.cpp)"
-	@echo "  07_execution         - System execution"
+# Test the API server
+test: $(TARGET)
+	@echo "Testing API server endpoints..."
+	@echo "Health check:"
+	@curl -s http://localhost:5000/health || echo "Server not running"
 	@echo ""
-	@echo "Sample Programs:"
-	@ls -la samples/
-	@echo ""
+	@echo "Available endpoints: /health, /scan, /parse, /codegen, /compile"
+
+# Install target (optional)
+install: $(TARGET)
+	cp $(TARGET) /usr/local/bin/
+
+# Uninstall target (optional)
+uninstall:
+	rm -f /usr/local/bin/$(TARGET)
+
+# Phony targets
+.PHONY: all clean run run-port test install uninstall compiler-stages
+
+# Help target
+help:
 	@echo "Available targets:"
-	@echo "  make build  - Build all stages"
-	@echo "  make test   - Test all stages"
-	@echo "  make clean  - Clean all stages"
-	@echo "  make demo   - Run complete demo"
-	@echo "  make status - Show this status"
-
-.PHONY: all build test clean install demo status
+	@echo "  all        - Build the API server and all compiler worker stages (default)"
+	@echo "  webserver  - Build API server (automatically builds workers)"
+	@echo "  compiler-stages - Build all compiler worker stages"
+	@echo "  clean      - Remove generated files"
+	@echo "  run        - Run the API server with workers on port 5000"
+	@echo "  run-port   - Run the API server with workers on a custom port"
+	@echo "  test       - Test API server endpoints"
+	@echo "  install    - Install to /usr/local/bin/"
+	@echo "  uninstall  - Remove from /usr/local/bin/"
+	@echo "  help       - Show this help message"
