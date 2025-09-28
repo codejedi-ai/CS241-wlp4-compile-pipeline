@@ -1,5 +1,5 @@
 # WLP4 Programming Language Specification
-
+WLP4 (pronounced "Wool P Four") is a subset of C++ which stands for “Waterloo Language, Plus, Pointers, Plus, Procedures”.
 ## Overview
 
 WLP4 is a strict subset of C++ designed for educational purposes. A WLP4 source file contains a sequence of procedure definitions, ending with the main procedure `wain`.
