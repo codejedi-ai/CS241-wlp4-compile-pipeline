@@ -1,0 +1,14 @@
+Token(ID, sw) Token(REG, $31) Token(COMMA, ,) Token(INT, -4) Token(LPAREN, () Token(REG, $30) Token(RPAREN, )) 
+
+Token(ID, lis) Token(REG, $29) 
+Token(WORD, .word) Token(ID, foo) 
+Token(ID, jalr) Token(REG, $29) 
+
+Token(ID, lis) Token(REG, $3) 
+Token(WORD, .word) Token(ID, bar) 
+Token(ID, lw) Token(REG, $3) Token(COMMA, ,) Token(INT, 0) Token(LPAREN, () Token(REG, $3) Token(RPAREN, )) 
+
+Token(ID, lw) Token(REG, $31) Token(COMMA, ,) Token(INT, -4) Token(LPAREN, () Token(REG, $30) Token(RPAREN, )) 
+Token(ID, jr) Token(REG, $31) 
+
+Token(LABEL, bar:) Token(WORD, .word) Token(INT, 0) 
