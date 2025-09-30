@@ -1,0 +1,16 @@
+int wain(int a, int b) {
+    // Binary search simulation with if statements
+    // Simulate searching for target value 7
+    
+    if (a == 7) {
+        println(0);  // Found at index 0
+    } else {
+        if (b == 7) {
+            println(1);  // Found at index 1
+        } else {
+            println(2);  // Found at index 2
+        }
+    }
+    
+    return 0;
+}

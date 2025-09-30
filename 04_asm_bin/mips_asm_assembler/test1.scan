@@ -1,0 +1,4 @@
+Token(ID, lw) Token(REG, $0) Token(COMMA, ,) Token(HEXINT, 0xffff) Token(LPAREN, () Token(REG, $0) Token(RPAREN, )) 
+Token(ID, sw) Token(REG, $1) Token(COMMA, ,) Token(HEXINT, 0x1234) Token(LPAREN, () Token(REG, $0) Token(RPAREN, )) 
+Token(ID, lw) Token(REG, $2) Token(COMMA, ,) Token(HEXINT, 0x0000) Token(LPAREN, () Token(REG, $0) Token(RPAREN, )) 
+Token(ID, sw) Token(REG, $3) Token(COMMA, ,) Token(HEXINT, 0x7fff) Token(LPAREN, () Token(REG, $0) Token(RPAREN, )) 
