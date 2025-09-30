@@ -1,4 +1,0 @@
-int wain(int a, int b) {
-    println(10);
-    return 0;
-}

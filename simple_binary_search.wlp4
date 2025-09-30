@@ -1,8 +1,0 @@
-int wain(int a, int b) {
-    // Simple binary search result simulation
-    // Searching for 7 in array [1, 3, 5, 7, 9]
-    // Binary search would find 7 at index 3
-    
-    println(3);  // Print the index where 7 was found
-    return 0;
-}

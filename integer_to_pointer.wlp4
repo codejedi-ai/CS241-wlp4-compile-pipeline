@@ -1,5 +1,0 @@
-int wain(int a, int b) {
-int x = 5;        // integer value
-int* ptr = &x;    // pointer to integer
-int bad = ptr;    // ERROR: cannot assign pointer to int
-}
