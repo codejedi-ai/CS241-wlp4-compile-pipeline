@@ -44,8 +44,8 @@ MERLFile parseMERLFile(const string& filename) {
     }
     
     // Extract code size and table information
-    int endCode = file.header[2];
-    int endModule = file.header[1];
+    uint32_t endCode = file.header[2];
+    uint32_t endModule = file.header[1];
     
     // Read code segment
     while (pos < endCode) {
