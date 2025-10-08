@@ -8,8 +8,7 @@
 #include <sstream>
 #include <iomanip>
 #include "asm.h"
-
-
+#define INSTRUCTION_SIZE 4
 const char opcode = 6; // 6 bits for opcode 32 - 6 = 26
 const char sreg = 5 + opcode; // 5 bits for sreg 26 - 5 = 21
 const char treg = 5 + sreg; // 5 bits for treg 21 - 5 = 16
@@ -24,7 +23,7 @@ std::map<std::string, vector<uint32_t>> branch_reference_map;
 std::vector<std::string> asm_files;
 //typedef word_cont uint32_t;
 // Instruction size constant (can be changed for different architectures)
-static constexpr uint32_t INSTRUCTION_SIZE = 4;
+// static constexpr uint32_t INSTRUCTION_SIZE = 4;
 
 void writebin(uint32_t instr) { assembly_binary_code.push_back(instr); }
 void coutmult(uint32_t s, uint32_t t) {
@@ -704,7 +703,7 @@ vector<uint32_t> get_merl_file(vector<uint32_t> assembly_binary_code, vector<uin
   // get the cookie
   uint32_t cookie = 0x10000002;
   // get the end of file
-  uint32_t end_of_code = assembly_binary_code.size() * 4 + 12; // Note: 4 is word_cont size, 12 is MERL header size
+  uint32_t end_of_code = assembly_binary_code.size() * INSTRUCTION_SIZE + INSTRUCTION_SIZE * 3; // Note: 4 is word_cont size, 12 is MERL header size
   uint32_t end_of_file = entries_binary.size() * 4 + end_of_code; // Note: 4 is word_cont size
   // print the assembly_binary_code
 
@@ -877,14 +876,19 @@ int main() {
   
   // Output binary data
   for (word w : binary_output) {
-    unsigned char c = w >> 24;
-    cout << c;
-    c = w >> 16;
-    cout << c;
-    c = w >> 8;
-    cout << c;
-    c = w;
-    cout << c;
+    //unsigned char c = w >> 24;
+    //cout << c;
+    //c = w >> 16;
+    //cout << c;
+    //c = w >> 8;
+    //cout << c;
+    //c = w;
+    //cout << c;
+    // print the same logic with for loop
+    for (int i = 1; i <= INSTRUCTION_SIZE; i++) {
+      unsigned char c = w >> (32 - i * 8);
+      cout << c;
+    }
   }
   
   return 0;
