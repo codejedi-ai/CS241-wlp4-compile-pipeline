@@ -3,39 +3,41 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#define WORD_SIZE 4
 using namespace std;
-
-// Function to load MERL data and return uint32 array
-vector<uint32_t> relocate_merl(const vector<uint32_t> &data,
-                               uint32_t loadAddress) {
+// make the word type
+using word = uint32_t;
+// Function to load MERL data and return word array
+vector<word> relocate_merl(const vector<word> &data,
+                               word loadAddress) {
   int pos = 0;
-  vector<uint32_t> memory;
-  uint32_t magicNumber = data[pos++];
-  uint32_t endModAddress = data[pos++];
-  uint32_t endModCodeAddress = data[pos++];
-  for (int i = 3; i < endModCodeAddress / 4; i++) {
-    uint32_t value = data[i];
+  vector<word> memory;
+  word magicNumber = data[pos++];
+  word endModAddress = data[pos++];
+  word endModCodeAddress = data[pos++];
+  for (int i = 3; i < endModCodeAddress / WORD_SIZE; i++) {
+    word value = data[i];
     memory.push_back(value);
   }
   pos = endModCodeAddress;
   while (pos < data.size()) {
-    uint32_t recordType = data[pos++];
+    word recordType = data[pos++];
     if (recordType == REL) {
-      uint32_t relAddress = data[pos++];
-      uint32_t index = relAddress - 12;
-      index = index / 4;
-      memory[index] += (loadAddress - 12);
+      word relAddress = data[pos++];
+      word index = relAddress - WORD_SIZE * 3;
+      index = index / WORD_SIZE;
+      memory[index] += (loadAddress - WORD_SIZE * 3);
     } else if (recordType == ESR) {
-      uint32_t esrAddress = data[pos++];
-      uint32_t esrSize = data[pos++];
+      word esrAddress = data[pos++];
+      word esrSize = data[pos++];
       for (int i = 0; i < esrSize; i++) {
-        uint32_t esrValue = data[pos++];
+        word esrValue = data[pos++];
       }
     } else if (recordType == ESD) {
-      uint32_t esdAddress = data[pos++];
-      uint32_t esdSize = data[pos++];
+      word esdAddress = data[pos++];
+      word esdSize = data[pos++];
       for (int i = 0; i < esdSize; i++) {
-        uint32_t esdValue = data[pos++];
+        word esdValue = data[pos++];
       }
     } else {
       cerr << "Error: Invalid record type" << endl;

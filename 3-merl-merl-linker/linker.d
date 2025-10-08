@@ -1,1 +1,1 @@
-linker.o: linker.cc decoder.h
+linker.o: linker.cc

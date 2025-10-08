@@ -1,6 +1,8 @@
 #include "decoder.h"
 #include "mipscpu.h"
 #include <stdio.h>
+#include <sys/types.h>
+#include <stdbool.h>
 
 // Static buffer for instruction string
 static char instruction_buffer[128];
@@ -133,4 +135,49 @@ void print_decoded_instruction(const char* bytes) {
         printf("0x%02x ", (unsigned char)bytes[i]);
     }
     printf("-> %s\n", decode_instruction_from_bytes(bytes));
+}
+void decode(const char* bytes, int num_bytes) {
+    int pos = 0;
+    bool previous_was_lis = false;
+    
+    while (pos < num_bytes) {
+        if (pos + INSTRUCTION_SIZE <= num_bytes) {
+            // Extract 4 bytes for the instruction
+            char instruction_bytes[INSTRUCTION_SIZE];
+            for (int i = 0; i < INSTRUCTION_SIZE; i++) {
+                instruction_bytes[i] = bytes[pos + i];
+            }
+            
+            // Construct 32-bit word in big-endian format (MIPS standard)
+            uint32_t word = ((unsigned char)instruction_bytes[0] << 24) |
+                           ((unsigned char)instruction_bytes[1] << 16) |
+                           ((unsigned char)instruction_bytes[2] << 8) |
+                           (unsigned char)instruction_bytes[3];
+            
+            const char* decoded;
+            if (previous_was_lis) {
+                // After lis, treat the next instruction as .word
+                decoded = ".word";
+                previous_was_lis = false;
+            } else {
+                decoded = decode_instruction_from_compiler(word);
+                // Check if this is a lis instruction
+                uint32_t opcode = word >> 26;
+                if (opcode == 0) {
+                    uint32_t function_code = word & 0x3F;
+                    if (function_code == 20) { // lis
+                        previous_was_lis = true;
+                    }
+                }
+            }
+            
+            printf("Instruction %2d: 0x%08x (%s)\n", pos / INSTRUCTION_SIZE, word, decoded);
+            
+            pos += INSTRUCTION_SIZE;
+        } else {
+            // Handle remaining bytes that don't form a complete instruction
+            printf("Warning: %d bytes remaining, not enough for complete instruction\n", num_bytes - pos);
+            break;
+        }
+    }
 }

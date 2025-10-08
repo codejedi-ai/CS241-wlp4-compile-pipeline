@@ -17,6 +17,9 @@ const char* decode_instruction_from_bytes(const char* bytes);
 // Example function to print decoded instruction
 void print_decoded_instruction(const char* bytes);
 
+// Function to decode a sequence of bytes
+void decode(const char* bytes, int num_bytes);
+
 #ifdef __cplusplus
 }
 #endif

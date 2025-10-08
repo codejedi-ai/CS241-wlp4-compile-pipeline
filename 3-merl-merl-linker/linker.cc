@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -8,30 +7,28 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "decoder.h"
+#include <stdio.h>
 using namespace std;
 #define REL 0x00000001
 #define ESR 0x00000011
-#define ESD 0x00000005
-#define INSTRUCTION_SIZE 4
+#define ESD 0x00000005  
 using word = uint32_t;
 using MERLFile = vector<word>;
-#include "decoder.h"
-#include <stdio.h>
+#define INSTRUCTION_SIZE 4
 
 // Static buffer for instruction string
 static char instruction_buffer[128];
 
 // Function to decode instruction based on compiler encoding functions
-const char* decode_instruction_from_compiler(uint32_t word) {
-    uint32_t opcode = word >> 26;
+const char* decode_instruction_from_compiler(word instruction) {
+    word opcode = instruction >> 26;
     
     if (opcode == 0) {
         // R-format instruction
-        uint32_t function_code = word & 0x3F;  // bits 5-0
-        int s = (word >> 21) & 0x1F;           // bits 25-21
-        int t = (word >> 16) & 0x1F;           // bits 20-16
-        int d = (word >> 11) & 0x1F;           // bits 15-11
+        word function_code = instruction & 0x3F;  // bits 5-0
+        word s = (instruction >> 21) & 0x1F;           // bits 25-21
+        word t = (instruction >> 16) & 0x1F;           // bits 20-16
+        word d = (instruction >> 11) & 0x1F;           // bits 15-11
         
         switch (function_code) {
             case 32: // add
@@ -88,39 +85,39 @@ const char* decode_instruction_from_compiler(uint32_t word) {
                 break;
             default:
                 snprintf(instruction_buffer, sizeof(instruction_buffer), 
-                        ".word %u", word);
+                        ".word %u", instruction);
                 break;
         }
     } else if (opcode == 4) { // beq
-        int s = (word >> 21) & 0x1F;
-        int t = (word >> 16) & 0x1F;
-        int16_t i = word & 0xFFFF; // sign-extend immediate
+        word s = (instruction >> 21) & 0x1F;
+        word t = (instruction >> 16) & 0x1F;
+        word i = instruction & 0xFFFF; // sign-extend immediate
         snprintf(instruction_buffer, sizeof(instruction_buffer), 
                 "beq $%d, $%d, %d", s, t, i);
     } else if (opcode == 5) { // bne
-        int s = (word >> 21) & 0x1F;
-        int t = (word >> 16) & 0x1F;
-        int16_t i = word & 0xFFFF; // sign-extend immediate
+        word s = (instruction >> 21) & 0x1F;
+        word t = (instruction >> 16) & 0x1F;
+        word i = instruction & 0xFFFF; // sign-extend immediate
         snprintf(instruction_buffer, sizeof(instruction_buffer), 
                 "bne $%d, $%d, %d", s, t, i);
     } else if (opcode == 35) { // lw
-        int s = (word >> 21) & 0x1F;
-        int t = (word >> 16) & 0x1F;
-        int16_t i = word & 0xFFFF; // sign-extend immediate
+        word s = (instruction >> 21) & 0x1F;
+        word t = (instruction >> 16) & 0x1F;
+        word i = instruction & 0xFFFF; // sign-extend immediate
         snprintf(instruction_buffer, sizeof(instruction_buffer), 
                 "lw $%d, %d($%d)", t, i, s);
     } else if (opcode == 43) { // sw
-        int s = (word >> 21) & 0x1F;
-        int t = (word >> 16) & 0x1F;
-        int16_t i = word & 0xFFFF; // sign-extend immediate
+        word s = (instruction >> 21) & 0x1F;
+        word t = (instruction >> 16) & 0x1F;
+        word i = instruction & 0xFFFF; // sign-extend immediate
         snprintf(instruction_buffer, sizeof(instruction_buffer), 
                 "sw $%d, %d($%d)", t, i, s);
     } else if (opcode == 2) { // j
-        uint32_t address = word & 0x3FFFFFF;
+        word address = instruction & 0x3FFFFFF;
         snprintf(instruction_buffer, sizeof(instruction_buffer), 
                 "j 0x%08x", address << 2);
     } else if (opcode == 3) { // jal
-        uint32_t address = word & 0x3FFFFFF;
+        word address = instruction & 0x3FFFFFF;
         snprintf(instruction_buffer, sizeof(instruction_buffer), 
                 "jal 0x%08x", address << 2);
     } else {
@@ -134,13 +131,12 @@ const char* decode_instruction_from_compiler(uint32_t word) {
 // Function to decode instruction from char array (INSTRUCTION_SIZE bytes)
 const char* decode_instruction_from_bytes(const char* bytes) {
     // Construct 32-bit word in big-endian format (MIPS standard)
-    uint32_t word = ((unsigned char)bytes[0] << 24) |
-                    ((unsigned char)bytes[1] << 16) |
-                    ((unsigned char)bytes[2] << 8) |
-                    (unsigned char)bytes[3];
-    
+    word instruction = ((unsigned char)bytes[0] << 0) |
+                    ((unsigned char)bytes[1] << 8) |
+                    ((unsigned char)bytes[2] << 16) |
+                    ((unsigned char)bytes[3] << 24);
     // Use the existing decoder function
-    return decode_instruction_from_compiler(word);
+    return decode_instruction_from_compiler(instruction);
 }
 
 // Example function showing how to use the decoder
@@ -161,18 +157,18 @@ MERLFile relocate_merl(const MERLFile &data,
   assert(magicNumber == 0x10000002);
   word endModAddress = data[pos++];
   word endModCodeAddress = data[pos++];
-  for (int i = 3; i < endModCodeAddress / 4; i++) {
+  for (int i = 3; i < endModCodeAddress / INSTRUCTION_SIZE; i++) {
     word value = data[i];
     memory.push_back(value);
   }
-  pos = endModCodeAddress;
+  pos = endModCodeAddress / INSTRUCTION_SIZE;
   while (pos < data.size()) {
     word recordType = data[pos++];
     if (recordType == REL) {
       word relAddress = data[pos++];
-      word index = relAddress - 12;
-      index = index / 4;
-      memory[index] += (loadAddress - 12);
+      word index = relAddress - 3 * INSTRUCTION_SIZE;
+      index = index / INSTRUCTION_SIZE;
+      memory[index] += (loadAddress - 3 * INSTRUCTION_SIZE);
     } else if (recordType == ESR) {
       word esrAddress = data[pos++];
       word esrSize = data[pos++];
@@ -211,12 +207,12 @@ MERLFile readMerrlFile(const string &filename) {
   }
 
   // read 4 bytes at a time
-  char bytes[4];
-  while (file.read(bytes, 4)) {
-    word word_ = (static_cast<uint8_t>(bytes[0]) << 24) |
-                    (static_cast<uint8_t>(bytes[1]) << 16) |
-                    (static_cast<uint8_t>(bytes[2]) << 8) |
-                    static_cast<uint8_t>(bytes[3]);
+  char bytes[INSTRUCTION_SIZE];
+  while (file.read(bytes, INSTRUCTION_SIZE)) {
+    word word_ = 0;
+    for (int i = 0; i < INSTRUCTION_SIZE; i++) {
+      word_ = (word_ << 8) | bytes[i];
+    }
     data.push_back(word_);
   }
 
@@ -309,7 +305,7 @@ vector<word> makeTableFooter(vector<word> rel_addrs, vector<ESR_Entry> esr_entri
     for (const ESR_Entry &esr_entry : table_dest.esr_entries) {
         if (table_src.esd_map.find(esr_entry.symbol) != table_src.esd_map.end()) {
           word esd_address = table_src.esd_map[esr_entry.symbol];
-          word code_index = (esr_entry.address - 12) / 4;
+          word code_index = (esr_entry.address - 3 * INSTRUCTION_SIZE) / INSTRUCTION_SIZE;
             linked[code_index] = esd_address;
           
         }
@@ -319,10 +315,10 @@ vector<word> makeTableFooter(vector<word> rel_addrs, vector<ESR_Entry> esr_entri
 vector<word> linkMERLFiles(vector<word> m1, vector<word> m2) {
   MERLFile linked;
   
-  word m1_end_code = m1[2] / 4;
-  word m1_end = m1[1] / 4;
-  word m2_end_code = m2[2] / 4;
-  word m2_end = m2[1] / 4;
+  word m1_end_code = m1[2] / INSTRUCTION_SIZE;
+  word m1_end = m1[1] / INSTRUCTION_SIZE;
+  word m2_end_code = m2[2] / INSTRUCTION_SIZE;
+  word m2_end = m2[1] / INSTRUCTION_SIZE;
   
   cerr << "m1_end_code: " << m1_end_code << ", m1_end: " << m1_end << endl;
   cerr << "m2_end_code: " << m2_end_code << ", m2_end: " << m2_end << endl;
@@ -331,7 +327,7 @@ vector<word> linkMERLFiles(vector<word> m1, vector<word> m2) {
   SymbolTable m1_table = parseSymbolTable(m1, m1_end_code, m1_end, 0, "m1_");
   
   // Calculate offset for m2
-  word OFFSET = m1_end_code * 4 - 12;
+  word OFFSET = m1_end_code * INSTRUCTION_SIZE - 3 * INSTRUCTION_SIZE;
   
   // Parse m2 symbol table with offset
   SymbolTable m2_table = parseSymbolTable(m2, m2_end_code, m2_end, OFFSET, "m2_");
@@ -351,7 +347,7 @@ vector<word> linkMERLFiles(vector<word> m1, vector<word> m2) {
   linked.insert(linked.end(), m2_code.begin(), m2_code.end());
 
   for (word rel_addr : m2_table.rel_addrs) {
-    word code_index = (rel_addr - 12) / 4;
+    word code_index = (rel_addr - 3 * INSTRUCTION_SIZE) / INSTRUCTION_SIZE;
     if (code_index < m2_code.size()) {
       linked[code_index] += OFFSET;
     }
@@ -374,12 +370,12 @@ vector<word> linkMERLFiles(vector<word> m1, vector<word> m2) {
 
   vector<word> result;
   result.push_back(0x10000002); // MERL cookie
-  result.push_back(12 + linked.size() * 4 + table_section.size() * 4); // endModule
-  result.push_back(12 + linked.size() * 4); // endCode
+  result.push_back(3 * INSTRUCTION_SIZE + linked.size() * INSTRUCTION_SIZE + table_section.size() * INSTRUCTION_SIZE); // endModule
+  result.push_back(3 * INSTRUCTION_SIZE + linked.size() * INSTRUCTION_SIZE); // endCode
   result.insert(result.end(), linked.begin(), linked.end());
   result.insert(result.end(), table_section.begin(), table_section.end());
-  assert(result.size() * 4 == result[1]);
-  assert(linked.size() * 4 + 12== result[2]);
+  assert(result.size() * INSTRUCTION_SIZE == result[1]);
+  assert(linked.size() * INSTRUCTION_SIZE + 3 * INSTRUCTION_SIZE== result[2]);
   return result;
 }
 void printMERLFile(const vector<word> &file) {
@@ -390,10 +386,9 @@ void printMERLFile(const vector<word> &file) {
 void writeMERLFile(const vector<word> &file, ostream &out) {
   // Write all words
   for (word word : file) {
-    out.put((word >> 24) & 0xFF);
-    out.put((word >> 16) & 0xFF);
-    out.put((word >> 8) & 0xFF);
-    out.put(word & 0xFF);
+    for (int i = 0; i < INSTRUCTION_SIZE; i++) {
+      out.put((word >> (24 - i * 8)) & 0xFF);
+    }
   }
 }
 void decode(const char* bytes, int num_bytes) {
