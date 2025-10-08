@@ -1,0 +1,23 @@
+=== ASSEMBLY ANALYSIS ===
+Binary data size: 16 bytes
+
+=== SYMBOL TABLE ===
+Label Name          | Address
+--------------------|--------
+
+=== IMPORT/EXPORT LABELS ===
+Import Labels: 
+Export Labels: 
+
+=== BRANCH REFERENCE MAP ===
+Label Name          | PC Addresses
+--------------------|-------------
+
+=== LABEL PC MAP ===
+Label Name          | PC Addresses
+--------------------|-------------
+Binary Format Detected
+Instruction 0: 0x2014 (lis $4)
+Instruction 1: 0x4 (.word)
+Instruction 2: 0x430820 (add $1, $2, $3)
+Instruction 3: 0x3e00008 (jr $31)

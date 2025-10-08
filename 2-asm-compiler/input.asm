@@ -1,9 +1,4 @@
-.import print ; Import print function for output
-.import init ; Import init function for memory management
-.import new ; Import new function for dynamic allocation
-.import delete ; Import delete function for memory deallocation
-.import putchar ; Import putchar function for character output
-.import getchar ; Import getchar function for character input
+
 lis $4 ; Load word size constant
 .word 4 ; Store word size (4 bytes) in $4
 lis $11 ; Load constant 1
@@ -25,8 +20,7 @@ add $2, $0, $0 ; Set $2 to 0 for int parameter (no array initialization needed)
 sw $31, -4($30) ; Store $31 at top of stack
 sub $30, $30, $4 ; Decrement stack pointer by 4 bytes
 lis $5 ; Load address of init function
-.word init ; Init function label
-jalr $5 ; Call init function for memory management
+.word 0 ; Init function label
 ;  ================ Popping $31 from stack ================ 
 add $30, $30, $4 ; Increment stack pointer by 4 bytes
 lw $31,-4($30) ; Load $31 from top of stack
