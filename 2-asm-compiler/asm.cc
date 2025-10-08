@@ -15,6 +15,14 @@ const char treg = 5 + sreg; // 5 bits for treg 21 - 5 = 16
 const char dreg = 5 + treg; // 5 bits for dreg 16 - 5 = 11
 using namespace std;
 
+// Helper function to write a word as binary data (4 bytes)
+void write_word_as_binary(uint32_t word) {
+  for (int i = 0; i < INSTRUCTION_SIZE; i++) {
+    unsigned char c = (word >> (24 - i * 8)) & 0xFF;
+    cout << c;
+  }
+}
+
 class Assembler{
 std::vector<uint32_t> assembly_binary_code;
 std::map<std::string, uint32_t> symbolTable;
@@ -613,16 +621,7 @@ vector<uint32_t> get_assembly_binary_code() {
 }
 };
 
-void write_assembly_binary_code(uint32_t instr) {
-  unsigned char c = instr >> 24;
-  cout << c;
-  c = instr >> 16;
-  cout << c;
-  c = instr >> 8;
-  cout << c;
-  c = instr;
-  cout << c;
-}
+
 // struct REL_ENTRY
 struct REL_ENTRY {
   uint32_t address;
@@ -857,7 +856,7 @@ vector<word> main_asm(std::string input_asm_contents) {
   
   // Output the result as binary data to stdout
   for (uint32_t word : result) {
-    write_assembly_binary_code(word);
+    write_word_as_binary(word);
   }
   
   return result;
@@ -876,19 +875,7 @@ int main() {
   
   // Output binary data
   for (word w : binary_output) {
-    //unsigned char c = w >> 24;
-    //cout << c;
-    //c = w >> 16;
-    //cout << c;
-    //c = w >> 8;
-    //cout << c;
-    //c = w;
-    //cout << c;
-    // print the same logic with for loop
-    for (int i = 1; i <= INSTRUCTION_SIZE; i++) {
-      unsigned char c = w >> (32 - i * 8);
-      cout << c;
-    }
+    write_word_as_binary(w);
   }
   
   return 0;

@@ -12,7 +12,7 @@ ASM_OBJ = asm.o
 SCANNER_OBJ = scanner.o
 
 # Executable
-EXEC = asmcompiler
+EXEC = binasm
 
 # Default target
 all: $(EXEC)
