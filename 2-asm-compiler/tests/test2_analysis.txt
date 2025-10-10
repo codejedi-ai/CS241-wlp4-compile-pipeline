@@ -1,0 +1,52 @@
+=== ASSEMBLY ANALYSIS ===
+Binary data size: 56 bytes
+
+=== SYMBOL TABLE ===
+Label Name          | Address
+--------------------|--------
+init               | 0x0     
+wain               | 0xc     
+
+=== IMPORT/EXPORT LABELS ===
+Import Labels: init 
+Export Labels: wain 
+
+=== BRANCH REFERENCE MAP ===
+Label Name          | PC Addresses
+--------------------|-------------
+
+=== LABEL PC MAP ===
+Label Name          | PC Addresses
+--------------------|-------------
+
+=== ESD (External Symbol Dictionary) ===
+Type | Address | Label Name
+-----|---------|-----------
+ESD  | 0xc      | wain
+
+=== ERL (External Reference List) ===
+Type | Address | Label Name
+-----|---------|-----------
+
+=== RELOCATION ENTRIES ===
+Type | Address
+-----|--------
+MERL Format Detected
+MERL Header:
+  Cookie: 0x10000002
+  End of file: 56
+  End of code: 28
+
+Instruction 0: 0x2014 (lis $4)
+Instruction 1: 0x4 (.word)
+Instruction 2: 0x430820 (add $1, $2, $3)
+Instruction 3: 0x3e00008 (jr $31)
+
+Relocation Entries:
+Entry 0: 0x5
+Entry 1: 0x18
+Entry 2: 0x4
+Entry 3: 0x77
+Entry 4: 0x61
+Entry 5: 0x69
+Entry 6: 0x6e

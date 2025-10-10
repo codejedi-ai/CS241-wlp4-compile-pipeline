@@ -18,7 +18,8 @@
 #define CS241_SCANNER_H
 
 using namespace std;
-
+class WLP4Compiler {
+  private:
 // Centralized error aggregation for detailed reporting using a CLI string
 struct ErrorAccumulator {
   std::string cliOutput;
@@ -2459,7 +2460,7 @@ string generateCompleteAssembly(string scannedContent) {
   ret += generateFunctionCode(root);
   return ret;
 }
-
+public:
 string wlp4_to_asm(string wlp4_input) {
   resetErrorLog();
   
@@ -2513,6 +2514,7 @@ string wlp4_to_asm(string wlp4_input) {
 
   return assemblyCode;
 }
+};
 
 int main() {
   // Read WLP4 input from stdin

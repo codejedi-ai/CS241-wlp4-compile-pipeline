@@ -25,6 +25,7 @@ void write_word_as_binary(uint32_t word) {
 }
 
 class Assembler{
+  private:
 std::vector<uint32_t> assembly_binary_code;
 std::map<std::string, uint32_t> symbolTable;
 std::map<std::string, vector<uint32_t>> lable_pc_map;
@@ -620,7 +621,7 @@ AsmReturn assemble(uint32_t pc_start) {
 vector<uint32_t> get_assembly_binary_code() {
   return assembly_binary_code;
 }
-};
+
 
 
 // struct REL_ENTRY
@@ -942,8 +943,8 @@ string decode_instruction(uint32_t word) {
     return "unknown (opcode=" + to_string(opcode) + ")";
   }
 }
-
-int main() {
+public:
+int asmAssemble() {
   // Read assembly input from stdin
   string asm_input = "";
   string line;
@@ -1178,3 +1179,4 @@ int main() {
   return 0;
 }
 
+};
