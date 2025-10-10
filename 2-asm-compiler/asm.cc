@@ -815,15 +815,6 @@ vector<word> to_merl(string input_asm_contents){
   
   return ret;
 }
-
-// Main function to test the assembler
-vector<word> main_asm(std::string input_asm_contents) {
-  // Process the input through the assembler
-  vector<word> result = to_merl(input_asm_contents);
-  
-  return result;
-}
-
 // Structure to hold analysis data
 struct AnalysisData {
   std::map<std::string, uint32_t> symbolTable;
@@ -944,6 +935,13 @@ string decode_instruction(uint32_t word) {
   }
 }
 public:
+// Main function to test the assembler
+vector<word> main_asm(std::string input_asm_contents) {
+  // Process the input through the assembler
+  vector<word> result = to_merl(input_asm_contents);
+  
+  return result;
+}
 int asmAssemble() {
   // Read assembly input from stdin
   string asm_input = "";
