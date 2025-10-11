@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include "decoder.h"
+#include "wlp4compile.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -10,22 +11,20 @@
 #include <iomanip>
 #include "asm.h"
 #define INSTRUCTION_SIZE 4
-const char opcode = 6; // 6 bits for opcode 32 - 6 = 26
-const char sreg = 5 + opcode; // 5 bits for sreg 26 - 5 = 21
-const char treg = 5 + sreg; // 5 bits for treg 21 - 5 = 16
-const char dreg = 5 + treg; // 5 bits for dreg 16 - 5 = 11
+// const char opcode = 6; // 6 bits for opcode 32 - 6 = 26
+//const char sreg = 5 + opcode; // 5 bits for sreg 26 - 5 = 21
+//const char treg = 5 + sreg; // 5 bits for treg 21 - 5 = 16
+//const char dreg = 5 + treg; // 5 bits for dreg 16 - 5 = 11
 using namespace std;
 
 // Helper function to write a word as binary data (4 bytes)
-void write_word_as_binary(uint32_t word) {
+void write_word_as_binary(uint32_t word, ostream &out) {
   for (int i = 0; i < INSTRUCTION_SIZE; i++) {
     unsigned char c = (word >> (24 - i * 8)) & 0xFF;
-    cout << c;
+    out << c;
   }
 }
 namespace asm_compiler {
-class Assembler{
-  private:
 std::vector<uint32_t> assembly_binary_code;
 std::map<std::string, uint32_t> symbolTable;
 std::map<std::string, vector<uint32_t>> lable_pc_map;
@@ -342,7 +341,7 @@ bool is_word_cont(uint32_t ind, std::vector<Token> &vecref) {
  * This file contains the main function of your program. By default, it just
  * prints the scanned list of tokens back to standard output.
  */
-public:
+
 struct AsmReturn{
   std::vector<uint32_t> assembly_binary_code;
   std::map<std::string, uint32_t> symbolTable;
@@ -747,7 +746,6 @@ std::string get_output_filename(const std::string& file_suffix) {
 
 vector<word> to_merl(string input_asm_contents){
   vector<word> ret;
-  Assembler assembler;
   // import lable from .import make set
   std::set<std::string> import_lables;
   // export lable from .export make set
@@ -773,7 +771,7 @@ vector<word> to_merl(string input_asm_contents){
           if (toks.size() >= 2 && toks[1].getKind() == Token::ID) {
             std::string label = toks[1].getLexeme();
             import_lables.insert(label);
-            assembler.addImportedLabel(label);
+            asm_compiler::addImportedLabel(label);
             file_suffix = ".merl";
             pc_start = 0xc;
             continue;
@@ -789,13 +787,13 @@ vector<word> to_merl(string input_asm_contents){
         }
       }
       // Not an import/export directive: treat as assembly source
-      assembler.addSourceLine(line);
+      asm_compiler::addSourceLine(line);
     }
   } catch (ScanningFailure &f) {
     std::cerr << f.what() << std::endl;
     return ret;
   }
-  Assembler::AsmReturn result = assembler.assemble(pc_start);
+  asm_compiler::AsmReturn result = asm_compiler::assemble(pc_start);
   if (result.error) return ret;
   
   // Prepare data for writing
@@ -829,7 +827,7 @@ struct AnalysisData {
 AnalysisData get_analysis_data(std::string input_asm_contents) {
   AnalysisData data;
   
-  Assembler assembler;
+
   std::stringstream input_asm_stream(input_asm_contents);
   uint32_t pc_start = 0;
   
@@ -846,17 +844,17 @@ AnalysisData get_analysis_data(std::string input_asm_contents) {
         if (tokens[0].getKind() == Token::IMPORT && tokens.size() >= 2) {
           std::string label = tokens[1].getLexeme();
           data.import_labels.insert(label);
-          assembler.addImportedLabel(label);
+          asm_compiler::addImportedLabel(label);
         } else if (tokens[0].getKind() == Token::EXPORT && tokens.size() >= 2) {
           std::string label = tokens[1].getLexeme();
           data.export_labels.insert(label);
         } else {
-          assembler.addSourceLine(line);
+          asm_compiler::addSourceLine(line);
         }
       }
     }
-    
-    Assembler::AsmReturn result = assembler.assemble(pc_start);
+
+    asm_compiler::AsmReturn result = asm_compiler::assemble(pc_start);
     if (!result.error) {
       data.symbolTable = result.symbolTable;
       data.label_pc_map = result.lable_pc_map;
@@ -934,7 +932,7 @@ string decode_instruction(uint32_t word) {
     return "unknown (opcode=" + to_string(opcode) + ")";
   }
 }
-public:
+
 // Main function to test the assembler
 vector<word> main_asm(std::string input_asm_contents) {
   // Process the input through the assembler
@@ -942,14 +940,19 @@ vector<word> main_asm(std::string input_asm_contents) {
   
   return result;
 }
+};
+
+
+
+
 vector<word> asmAssemble(string asm_input = "") {
   // Read assembly input from stdin
   
   string line;
 
-  
+
   // Compile Assembly to Binary
-  vector<word> binary_output = main_asm(asm_input);
+  vector<word> binary_output = asm_compiler::main_asm(asm_input);
   
   // Convert binary output to char array for decoder
   vector<char> binary_data;
@@ -962,7 +965,7 @@ vector<word> asmAssemble(string asm_input = "") {
   }
   
   // Get analysis data
-  AnalysisData analysis = get_analysis_data(asm_input);
+  asm_compiler::AnalysisData analysis = asm_compiler::get_analysis_data(asm_input);
   
   // Decode and print instructions using cerr
   cerr << "=== ASSEMBLY ANALYSIS ===" << endl;
@@ -1097,7 +1100,7 @@ vector<word> asmAssemble(string asm_input = "") {
         decoded = ".word";
         previous_was_lis = false;
       } else {
-        decoded = decode_instruction(word);
+        decoded = asm_compiler::decode_instruction(word);
         uint32_t opcode = word >> 26;
         if (opcode == 0) {
           uint32_t function_code = word & 0x3F;
@@ -1147,7 +1150,7 @@ vector<word> asmAssemble(string asm_input = "") {
           decoded = ".word";
           previous_was_lis = false;
         } else {
-          decoded = decode_instruction(word);
+          decoded = asm_compiler::decode_instruction(word);
           uint32_t opcode = word >> 26;
           if (opcode == 0) {
             uint32_t function_code = word & 0x3F;
@@ -1171,21 +1174,4 @@ vector<word> asmAssemble(string asm_input = "") {
   return binary_output;
 }
 
-};
-}
 
-int main(){
-  string asm_input = "";
-  string line;
-  while (getline(cin, line)) {
-    asm_input += line + "\n";
-  }
-  // Assemble the input assembly code
-  asm_compiler::Assembler assembler;
-  vector<word> binary_output = assembler.asmAssemble(asm_input);
-  // Output binary data to stdout
-  for (word w : binary_output) {
-    write_word_as_binary(w);
-  }
-  
-}

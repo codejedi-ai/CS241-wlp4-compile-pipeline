@@ -1449,12 +1449,12 @@ bool allValidVar(Tree *pr, map<string, string> &symbolTables,
   stringstream ssin(pr->rule);
   string firstNum, strIn;
   ssin >> firstNum;
-  //int children = 0;
+  // int children = 0;
   vector<string> splitedRule;
   // Have child
   while (ssin >> strIn) {
     splitedRule.push_back(strIn);
-    //children++;
+    // children++;
     // this is getting the children of the stack once it poped it goes to the
     // main stack
   }
@@ -2519,20 +2519,3 @@ string wlp4_to_asm(string wlp4_input){
   return wlp4_compiler::wlp4_to_asm(wlp4_input);
 }
 
-int main(){
-  string wlp4input = "";
-  string line;
-  while (getline(cin, line)) {
-    wlp4input += line + "\n";
-  }
-  string asm_input = wlp4_to_asm(wlp4input);
-  cout << asm_input;
-  // Assemble the input assembly code
-  //asm_compiler::Assembler assembler;
-  //vector<word> binary_output = assembler.asmAssemble(asm_input);
-  // Output binary data to stdout
-  //for (word w : binary_output) {
-  //  write_word_as_binary(w);
-  // }
-  
-}
