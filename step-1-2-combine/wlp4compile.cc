@@ -2450,8 +2450,8 @@ string generateCompleteAssembly(string scannedContent) {
   ret += ".import delete ; Import delete function for memory deallocation\n";
   ret += ".import putchar ; Import putchar function for character output\n";
   ret += ".import getchar ; Import getchar function for character input\n";
-  ret += "lis $" + to_string(WORD_SIZE) + " ; Load word size constant\n";
-  ret += ".word " + to_string(WORD_SIZE) + " ; Store word size (" +  to_string(WORD_SIZE) + " bytes) in $" + to_string(WORD_SIZE) + "\n";
+  ret += "lis $4 ; Load word size constant\n";
+  ret += ".word " + to_string(WORD_SIZE) + " ; Store word size (" +  to_string(WORD_SIZE) + " bytes) in $4\n";
   ret += "lis $11 ; Load constant 1\n";
   ret += ".word 1 ; Store 1 in $11 (used for comparisons and NULL)\n";
   ret += "beq $0, $0, wain ; Jump to main function (unconditional branch)\n";
