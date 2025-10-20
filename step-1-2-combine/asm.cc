@@ -27,7 +27,7 @@ void write_word_as_binary(uint32_t word, ostream &out) {
 namespace asm_compiler {
 std::vector<uint32_t> assembly_binary_code;
 std::map<std::string, uint32_t> symbolTable;
-std::map<std::string, vector<uint32_t>> lable_pc_map;
+std::map<std::string, vector<uint32_t>> label_pc_map;
 std::map<std::string, vector<uint32_t>> branch_reference_map;
 std::vector<std::string> asm_files;
 //typedef word_cont uint32_t;
@@ -345,7 +345,7 @@ bool is_word_cont(uint32_t ind, std::vector<Token> &vecref) {
 struct AsmReturn{
   std::vector<uint32_t> assembly_binary_code;
   std::map<std::string, uint32_t> symbolTable;
-  std::map<std::string, vector<uint32_t>> lable_pc_map;
+  std::map<std::string, vector<uint32_t>> label_pc_map;
   std::map<std::string, vector<uint32_t>> branch_reference_map;
   std::vector<std::string> asm_files;
   bool error = false;
@@ -383,7 +383,7 @@ AsmReturn assemble(uint32_t pc_start) {
     uint32_t ind = 0;
     // I CANNOT USE LOOPS OR ELSE I WOULD GET ERROR
     /*
-    Not using the while loop I cannot have infinite lables infront of the
+    Not using the while loop I cannot have infinite labels infront of the
     instruction
 
     */
@@ -438,13 +438,15 @@ AsmReturn assemble(uint32_t pc_start) {
       string str = line[ind].getLexeme();
       if (line[ind].getKind() == Token::ID) {
         if (symbolTable.count(str) == 0) {
-          std::cerr << "ERROR: Invalid Lablel:" << str << std::endl;
+          std::cerr << "ERROR: Invalid labell:" << str << std::endl;
           ret.error = true;
           return ret;
         }
         instr = symbolTable[str];
         // the string need the pc
-        lable_pc_map[str].push_back(pc);
+        // this is for the MERRL file generation
+        // For every .word label we need to record its pc
+        label_pc_map[str].push_back(pc);
       } else {
         instr = line[ind].toNumber();
       }
@@ -612,7 +614,7 @@ AsmReturn assemble(uint32_t pc_start) {
   }
   ret.assembly_binary_code = assembly_binary_code;
   ret.symbolTable = symbolTable;
-  ret.lable_pc_map = lable_pc_map;
+  ret.label_pc_map = label_pc_map;
   ret.branch_reference_map = branch_reference_map;
   ret.asm_files = asm_files;
   return ret;
@@ -644,10 +646,10 @@ struct ESD_ENTRY {
 };
 
 vector<uint32_t>
-get_entries_binary(std::set<std::string> export_lables,
-                   std::set<std::string> import_lables,
+get_entries_binary(std::set<std::string> export_labels,
+                   std::set<std::string> import_labels,
                    std::map<std::string, uint32_t> symbolTable,
-                   std::map<std::string, vector<uint32_t>> lable_pc_map) {
+                   std::map<std::string, vector<uint32_t>> label_pc_map) {
   // print the tables to cerr
   // vector<uint32_t> rel_enteries;
   // ESR entries
@@ -656,13 +658,13 @@ get_entries_binary(std::set<std::string> export_lables,
   vector<ESR_ENTRY> esr_entries;
   vector<ESD_ENTRY> esd_entries;
   // for each export
-  for (auto const &x : export_lables) {
+  for (auto const &x : export_labels) {
     esd_entries.push_back(ESD_ENTRY{symbolTable[x], x});
   }
-  for (auto const &x : lable_pc_map) {
+  for (auto const &x : label_pc_map) {
 
     for (uint32_t pc : x.second) {
-      if (import_lables.count(x.first) == 0) {
+      if (import_labels.count(x.first) == 0) {
         rel_enteries.push_back(REL_ENTRY{pc});
       } else {
         esr_entries.push_back(ESR_ENTRY{pc, x.first});
@@ -746,10 +748,10 @@ std::string get_output_filename(const std::string& file_suffix) {
 
 vector<word> to_merl(string input_asm_contents){
   vector<word> ret;
-  // import lable from .import make set
-  std::set<std::string> import_lables;
-  // export lable from .export make set
-  std::set<std::string> export_lables;
+  // import label from .import make set
+  std::set<std::string> import_labels;
+  // export label from .export make set
+  std::set<std::string> export_labels;
   string file_suffix = ".bin";
   uint32_t pc_start = 0;
   
@@ -770,7 +772,7 @@ vector<word> to_merl(string input_asm_contents){
         if (toks[0].getKind() == Token::IMPORT) {
           if (toks.size() >= 2 && toks[1].getKind() == Token::ID) {
             std::string label = toks[1].getLexeme();
-            import_lables.insert(label);
+            import_labels.insert(label);
             asm_compiler::addImportedLabel(label);
             file_suffix = ".merl";
             pc_start = 0xc;
@@ -779,7 +781,7 @@ vector<word> to_merl(string input_asm_contents){
         } else if (toks[0].getKind() == Token::EXPORT) {
           if (toks.size() >= 2 && toks[1].getKind() == Token::ID) {
             std::string label = toks[1].getLexeme();
-            export_lables.insert(label);
+            export_labels.insert(label);
             file_suffix = ".merl";
             pc_start = 0xc;
             continue;
@@ -801,7 +803,7 @@ vector<word> to_merl(string input_asm_contents){
   
   if (file_suffix == ".merl") {
     // Generate MERL file
-    vector<uint32_t> entries_binary = get_entries_binary(export_lables, import_lables, result.symbolTable, result.lable_pc_map);
+    vector<uint32_t> entries_binary = get_entries_binary(export_labels, import_labels, result.symbolTable, result.label_pc_map);
     data_to_write = get_merl_file(result.assembly_binary_code, entries_binary);
   } else {
     // Use assembly binary code directly
@@ -857,14 +859,14 @@ AnalysisData get_analysis_data(std::string input_asm_contents) {
     asm_compiler::AsmReturn result = asm_compiler::assemble(pc_start);
     if (!result.error) {
       data.symbolTable = result.symbolTable;
-      data.label_pc_map = result.lable_pc_map;
+      data.label_pc_map = result.label_pc_map;
       data.branch_reference_map = result.branch_reference_map;
       
       // Generate binary output
       if (data.import_labels.empty() && data.export_labels.empty()) {
         data.binary_output = result.assembly_binary_code;
       } else {
-        vector<uint32_t> entries_binary = get_entries_binary(data.export_labels, data.import_labels, result.symbolTable, result.lable_pc_map);
+        vector<uint32_t> entries_binary = get_entries_binary(data.export_labels, data.import_labels, result.symbolTable, result.label_pc_map);
         data.binary_output = get_merl_file(result.assembly_binary_code, entries_binary);
       }
     }
